@@ -81,7 +81,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Navigation List -->
+                <!-- Navigation List (Streamlined for Autonomous AI Agent) -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="14,16,14,16">
                     <StackPanel>
                         <RadioButton Content="Overview" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Overview" IsChecked="True">
@@ -106,89 +106,23 @@
                             </RadioButton.ContentTemplate>
                         </RadioButton>
 
-                        <RadioButton Content="Desktop" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Desktop">
-                            <RadioButton.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Path Data="{StaticResource IconDesktop}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Desktop" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </RadioButton.ContentTemplate>
-                        </RadioButton>
-
-                        <RadioButton Content="Adobe" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Adobe">
-                            <RadioButton.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Path Data="{StaticResource IconAdobe}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Adobe" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </RadioButton.ContentTemplate>
-                        </RadioButton>
-
-                        <RadioButton Content="Recording" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Recording">
-                            <RadioButton.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Path Data="{StaticResource IconRecording}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Recording" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </RadioButton.ContentTemplate>
-                        </RadioButton>
-
-                        <RadioButton Content="Screenshot" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Screenshot">
-                            <RadioButton.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Path Data="{StaticResource IconScreenshot}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Screenshot" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </RadioButton.ContentTemplate>
-                        </RadioButton>
-
-                        <RadioButton Content="Files" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Files">
-                            <RadioButton.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Path Data="{StaticResource IconFiles}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Files" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </RadioButton.ContentTemplate>
-                        </RadioButton>
-
-                        <RadioButton Content="Self-Test" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Diagnostics">
-                            <RadioButton.ContentTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Path Data="{StaticResource IconTest}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Self-Test" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </RadioButton.ContentTemplate>
-                        </RadioButton>
-
-                        <RadioButton Content="Settings" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Settings">
+                        <RadioButton Content="Security &amp; Permissions" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Settings">
                             <RadioButton.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
                                         <Path Data="{StaticResource IconSettings}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Settings" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Permissions" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </RadioButton.ContentTemplate>
                         </RadioButton>
 
-                        <RadioButton Content="Logs" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Logs">
+                        <RadioButton Content="Audit Logs" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Logs">
                             <RadioButton.ContentTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
                                         <Path Data="{StaticResource IconLogs}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Logs" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Audit Logs" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </RadioButton.ContentTemplate>
