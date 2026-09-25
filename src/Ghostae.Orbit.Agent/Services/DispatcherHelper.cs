@@ -5,6 +5,8 @@ namespace Ghostae.Orbit.Agent.Services
 {
     public static class DispatcherHelper
     {
+        public static void RunOnUI(Action action) => SafeInvoke(action);
+
         public static void SafeInvoke(Action action)
         {
             var app = Application.Current;

@@ -253,6 +253,8 @@ namespace Ghostae.Orbit.Agent.Services
             await SendRawJsonAsync(json);
         }
 
+        public async Task SendRawMessageAsync(string json) => await SendRawJsonAsync(json);
+
         public async Task SendRawJsonAsync(string json)
         {
             if (_webSocket?.State != WebSocketState.Open) return;
