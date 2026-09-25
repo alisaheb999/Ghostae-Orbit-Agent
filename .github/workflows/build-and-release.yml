@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   build-and-sign:
@@ -37,10 +38,14 @@ jobs:
             -p:IncludeNativeLibrariesForSelfExtract=true `
             -o ./publish/OrbitAgent
 
-      - name: Package Artifact for SignPath Signing
-        shell: pwsh
-        run: |
-          Compress-Archive -Path ./publish/OrbitAgent/Ghostae.Orbit.Agent.exe -DestinationPath ./publish/unsigned-orbit-agent.zip
+      - name: Upload Unsigned Artifact to GitHub
+        uses: actions/upload-artifact@v4
+        id: upload-unsigned
+        with:
+          name: unsigned-orbit-agent
+          path: ./publish/OrbitAgent/Ghostae.Orbit.Agent.exe
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Sign Binary via SignPath.io
         uses: SignPath/github-action-submit-signing-request@v1
@@ -52,7 +57,7 @@ jobs:
           signing-policy-slug: 'Ghostae-Signing-Policy'
           artifact-configuration-slug: 'initial-version'
           github-token: '${{ secrets.GITHUB_TOKEN }}'
-          input-artifact-filepath: './publish/unsigned-orbit-agent.zip'
+          github-artifact-id: '${{ steps.upload-unsigned.outputs.artifact-id }}'
           output-artifact-directory: './publish/signed'
           wait-for-completion: true
         continue-on-error: true
@@ -61,10 +66,16 @@ jobs:
         shell: pwsh
         run: |
           if (Test-Path "./publish/signed") {
-            $signedZip = Get-ChildItem -Path "./publish/signed" -Filter "*.zip" | Select-Object -First 1
-            if ($signedZip) {
-              Expand-Archive -Path $signedZip.FullName -DestinationPath ./publish/OrbitAgent -Force
-              Write-Host "[SUCCESS] Extracted SignPath-signed binary!"
+            $signedFile = Get-ChildItem -Path "./publish/signed" -Recurse -Filter "Ghostae.Orbit.Agent.exe" | Select-Object -First 1
+            if ($signedFile) {
+              Copy-Item -Path $signedFile.FullName -Destination "./publish/OrbitAgent/Ghostae.Orbit.Agent.exe" -Force
+              Write-Host "[SUCCESS] Replaced unsigned binary with SignPath-signed binary!"
+            } else {
+              $signedZip = Get-ChildItem -Path "./publish/signed" -Filter "*.zip" | Select-Object -First 1
+              if ($signedZip) {
+                Expand-Archive -Path $signedZip.FullName -DestinationPath ./publish/OrbitAgent -Force
+                Write-Host "[SUCCESS] Extracted signed zip package!"
+              }
             }
           }
 
@@ -85,3 +96,12 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Build Artifacts to GitHub Run
+        uses: actions/upload-artifact@v4
+        with:
+          name: GhostaeOrbitAgent-Release-win-x64
+          path: |
+            ./publish/OrbitAgent/Ghostae.Orbit.Agent.exe
+            ./publish/GhostaeOrbitAgent-win-x64.zip
+          if-no-files-found: error
