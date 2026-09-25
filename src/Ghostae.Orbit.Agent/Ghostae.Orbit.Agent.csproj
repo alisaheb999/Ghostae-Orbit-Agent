@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>Ghostae.Orbit.Agent</RootNamespace>
+    <AssemblyName>Ghostae.Orbit.Agent</AssemblyName>
+    <StartupObject>Ghostae.Orbit.Agent.App</StartupObject>
+    <ApplicationTitle>Ghostae Orbit Agent</ApplicationTitle>
+    <Version>1.0.0</Version>
+    <Company>Ghostae</Company>
+    <Product>Ghostae Orbit Agent</Product>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+</Project>

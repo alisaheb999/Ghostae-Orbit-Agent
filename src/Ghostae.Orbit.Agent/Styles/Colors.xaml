@@ -1,0 +1,77 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Primary Canvas / Backgrounds -->
+    <Color x:Key="BgWhiteColor">#FFFFFF</Color>
+    <Color x:Key="BgLightGrayColor">#F8F9FA</Color>
+    <Color x:Key="BgCardColor">#FFFFFF</Color>
+    <Color x:Key="BgCardHoverColor">#F9FAFB</Color>
+    <Color x:Key="BgSubtleColor">#F3F4F6</Color>
+
+    <!-- Accent Red (Ghostae Powerful Red) -->
+    <Color x:Key="AccentRedColor">#EB0029</Color>
+    <Color x:Key="AccentRedHoverColor">#D00024</Color>
+    <Color x:Key="AccentRedSubtleColor">#FEE2E2</Color>
+
+    <!-- Text Colors -->
+    <Color x:Key="TextPrimaryColor">#111827</Color>
+    <Color x:Key="TextSecondaryColor">#6B7280</Color>
+    <Color x:Key="TextMutedColor">#9CA3AF</Color>
+    <Color x:Key="TextWhiteColor">#FFFFFF</Color>
+
+    <!-- Border & Dividers -->
+    <Color x:Key="BorderLightColor">#E5E7EB</Color>
+    <Color x:Key="BorderMediumColor">#D1D5DB</Color>
+
+    <!-- Semantic State Colors -->
+    <Color x:Key="StatusGreenColor">#10B981</Color>
+    <Color x:Key="StatusYellowColor">#F59E0B</Color>
+    <Color x:Key="StatusBlueColor">#3B82F6</Color>
+
+    <!-- Solid Brushes -->
+    <SolidColorBrush x:Key="BgWhiteBrush" Color="{StaticResource BgWhiteColor}"/>
+    <SolidColorBrush x:Key="BgLightGrayBrush" Color="{StaticResource BgLightGrayColor}"/>
+    <SolidColorBrush x:Key="BgCardBrush" Color="{StaticResource BgCardColor}"/>
+    <SolidColorBrush x:Key="BgCardHoverBrush" Color="{StaticResource BgCardHoverColor}"/>
+    <SolidColorBrush x:Key="BgSubtleBrush" Color="{StaticResource BgSubtleColor}"/>
+
+    <SolidColorBrush x:Key="AccentRedBrush" Color="{StaticResource AccentRedColor}"/>
+    <SolidColorBrush x:Key="AccentRedHoverBrush" Color="{StaticResource AccentRedHoverColor}"/>
+    <SolidColorBrush x:Key="AccentRedSubtleBrush" Color="{StaticResource AccentRedSubtleColor}"/>
+
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMutedColor}"/>
+    <SolidColorBrush x:Key="TextWhiteBrush" Color="{StaticResource TextWhiteColor}"/>
+
+    <SolidColorBrush x:Key="BorderLightBrush" Color="{StaticResource BorderLightColor}"/>
+    <SolidColorBrush x:Key="BorderMediumBrush" Color="{StaticResource BorderMediumColor}"/>
+
+    <SolidColorBrush x:Key="StatusGreenBrush" Color="{StaticResource StatusGreenColor}"/>
+    <SolidColorBrush x:Key="StatusYellowBrush" Color="{StaticResource StatusYellowColor}"/>
+    <SolidColorBrush x:Key="StatusBlueBrush" Color="{StaticResource StatusBlueColor}"/>
+
+    <!-- Premium Gradients & Shimmers -->
+    <LinearGradientBrush x:Key="PrimaryRedGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FF1E40" Offset="0.0"/>
+        <GradientStop Color="#EB0029" Offset="0.5"/>
+        <GradientStop Color="#C80022" Offset="1.0"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="PrimaryRedHoverGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FF3352" Offset="0.0"/>
+        <GradientStop Color="#FF1E40" Offset="0.5"/>
+        <GradientStop Color="#D00024" Offset="1.0"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="CardHeaderGradient" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#FFFFFF" Offset="0.0"/>
+        <GradientStop Color="#FAFAFC" Offset="1.0"/>
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="StatusGlowGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#10B981" Offset="0.0"/>
+        <GradientStop Color="#059669" Offset="1.0"/>
+    </LinearGradientBrush>
+
+</ResourceDictionary>

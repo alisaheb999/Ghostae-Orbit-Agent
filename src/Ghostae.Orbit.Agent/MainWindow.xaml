@@ -1,0 +1,223 @@
+<Window x:Class="Ghostae.Orbit.Agent.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:Ghostae.Orbit.Agent.ViewModels"
+        xmlns:views="clr-namespace:Ghostae.Orbit.Agent.Views"
+        mc:Ignorable="d"
+        Title="Ghostae Orbit Agent"
+        Height="800" Width="1280"
+        MinHeight="680" MinWidth="1050"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BgLightGrayBrush}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto">
+
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:OverviewViewModel}">
+            <views:OverviewView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TasksViewModel}">
+            <views:TasksView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DesktopViewModel}">
+            <views:DesktopView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AdobeViewModel}">
+            <views:AdobeView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:RecordingViewModel}">
+            <views:RecordingView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ScreenshotViewModel}">
+            <views:ScreenshotView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:FilesViewModel}">
+            <views:FilesView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LogsViewModel}">
+            <views:LogsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:TestDiagnosticsViewModel}">
+            <views:TestDiagnosticsView/>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- LEFT SIDEBAR -->
+        <Border Grid.Column="0" Background="{StaticResource BgWhiteBrush}" BorderThickness="0,0,1,0" BorderBrush="{StaticResource BorderLightBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Brand Header -->
+                <Border Grid.Row="0" Padding="24,24,24,20" BorderThickness="0,0,0,1" BorderBrush="{StaticResource BorderLightBrush}">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="34" Height="34" CornerRadius="8" Background="{StaticResource AccentRedBrush}">
+                            <Path Data="{StaticResource IconGhostaeLogo}" Fill="{StaticResource TextWhiteBrush}" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="GHOSTAE" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentRedBrush}"/>
+                            <TextBlock Text="Orbit Agent" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,1,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Navigation List -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="14,16,14,16">
+                    <StackPanel>
+                        <RadioButton Content="Overview" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Overview" IsChecked="True">
+                            <RadioButton.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="{StaticResource IconOverview}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Overview" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </RadioButton.ContentTemplate>
+                        </RadioButton>
+
+                        <RadioButton Content="Tasks" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Tasks">
+                            <RadioButton.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="{StaticResource IconTasks}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Tasks" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </RadioButton.ContentTemplate>
+                        </RadioButton>
+
+                        <RadioButton Content="Desktop" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Desktop">
+                            <RadioButton.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="{StaticResource IconDesktop}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Desktop" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </RadioButton.ContentTemplate>
+                        </RadioButton>
+
+                        <RadioButton Content="Adobe" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Adobe">
+                            <RadioButton.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="{StaticResource IconAdobe}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Adobe" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </RadioButton.ContentTemplate>
+                        </RadioButton>
+
+                        <RadioButton Content="Recording" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Recording">
+                            <RadioButton.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="{StaticResource IconRecording}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Recording" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </RadioButton.ContentTemplate>
+                        </RadioButton>
+
+                        <RadioButton Content="Screenshot" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Screenshot">
+                            <RadioButton.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="{StaticResource IconScreenshot}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Screenshot" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </RadioButton.ContentTemplate>
+                        </RadioButton>
+
+                        <RadioButton Content="Files" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Files">
+                            <RadioButton.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="{StaticResource IconFiles}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Files" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </RadioButton.ContentTemplate>
+                        </RadioButton>
+
+                        <RadioButton Content="Self-Test" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Diagnostics">
+                            <RadioButton.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="{StaticResource IconTest}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Self-Test" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </RadioButton.ContentTemplate>
+                        </RadioButton>
+
+                        <RadioButton Content="Settings" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Settings">
+                            <RadioButton.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="{StaticResource IconSettings}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Settings" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </RadioButton.ContentTemplate>
+                        </RadioButton>
+
+                        <RadioButton Content="Logs" Style="{StaticResource OrbitNavButton}" Command="{Binding NavigateCommand}" CommandParameter="Logs">
+                            <RadioButton.ContentTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Path Data="{StaticResource IconLogs}" Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Width="16" Height="16" Stretch="Uniform" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Logs" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </RadioButton.ContentTemplate>
+                        </RadioButton>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- BOTTOM STATUS & VERSION -->
+                <Border Grid.Row="2" Padding="20,18" BorderThickness="0,1,0,0" BorderBrush="{StaticResource BorderLightBrush}">
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="8" Height="8" Fill="{Binding ConnectionColorBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding AgentStatusText}" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="16,3,0,0">
+                                <TextBlock Text="{Binding ConnectionStatusText}" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"/>
+                                <TextBlock Text=" • " FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+                                <TextBlock Text="{Binding Version}" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+            </Grid>
+        </Border>
+
+        <!-- MAIN CONTENT AREA -->
+        <ContentControl Grid.Column="1" Content="{Binding CurrentView}"/>
+
+    </Grid>
+</Window>

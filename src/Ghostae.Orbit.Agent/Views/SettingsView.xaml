@@ -1,0 +1,114 @@
+<UserControl x:Class="Ghostae.Orbit.Agent.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignHeight="800" d:DesignWidth="900">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,28,32,32">
+
+            <!-- Header -->
+            <StackPanel Margin="0,0,0,24">
+                <TextBlock Text="Settings" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                <TextBlock Text="Agent configuration, server connection, and security permissions" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <!-- General Settings -->
+            <Border Style="{StaticResource OrbitCard}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="General" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14"/>
+
+                    <CheckBox Content="Start Orbit Agent with Windows" IsChecked="{Binding StartWithWindows}" Margin="0,0,0,10" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <CheckBox Content="Minimize to System Tray on close" IsChecked="{Binding MinimizeToTray}" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Connection Settings -->
+            <Border Style="{StaticResource OrbitCard}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Server Connection" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14"/>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Server WebSocket URL" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource OrbitTextBox}"/>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Device Identity ID" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding DeviceId, Mode=OneWay}" IsReadOnly="True" Style="{StaticResource OrbitTextBox}"/>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Authentication Token" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding AuthToken, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource OrbitTextBox}"/>
+                    </Grid>
+
+                    <Button Content="Reconnect to Server" Style="{StaticResource OrbitPrimaryButton}" Command="{Binding ReconnectCommand}" HorizontalAlignment="Left" Padding="16,8"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Permissions Allowlist -->
+            <Border Style="{StaticResource OrbitCard}" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Security &amp; Permissions" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14"/>
+
+                    <CheckBox Content="Allow Screenshots" IsChecked="{Binding AllowScreenshots}" Margin="0,0,0,10" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <CheckBox Content="Allow Screen Recording" IsChecked="{Binding AllowRecording}" Margin="0,0,0,10" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <CheckBox Content="Allow File System Operations" IsChecked="{Binding AllowFileOperations}" Margin="0,0,0,10" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <CheckBox Content="Allow Adobe After Effects &amp; Premiere Control" IsChecked="{Binding AllowAdobeControl}" Margin="0,0,0,10" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <CheckBox Content="Allow Authorized Power Control (Shutdown / Restart)" IsChecked="{Binding AllowPowerControl}" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Storage & Cleanup -->
+            <Border Style="{StaticResource OrbitCard}">
+                <StackPanel>
+                    <TextBlock Text="Storage &amp; Output Directories" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,14"/>
+
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Recordings Directory" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding RecordingOutputDir, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource OrbitTextBox}" Margin="0,0,8,0"/>
+                        <Button Grid.Column="2" Content="Browse" Style="{StaticResource OrbitSecondaryButton}" Command="{Binding BrowseRecordingDirCommand}" Padding="12,6"/>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Screenshots Directory" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                        <TextBox Grid.Column="1" Text="{Binding ScreenshotOutputDir, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource OrbitTextBox}" Margin="0,0,8,0"/>
+                        <Button Grid.Column="2" Content="Browse" Style="{StaticResource OrbitSecondaryButton}" Command="{Binding BrowseScreenshotDirCommand}" Padding="12,6"/>
+                    </Grid>
+
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Local Storage Used: " FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding StorageSummary}" FontWeight="Bold" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}"/>
+                        </StackPanel>
+                        <Button Content="Clear Cache" Style="{StaticResource OrbitSecondaryButton}" Command="{Binding ClearCacheCommand}" HorizontalAlignment="Right" Padding="12,6"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,70 @@
+<UserControl x:Class="Ghostae.Orbit.Agent.Views.ScreenshotView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignHeight="700" d:DesignWidth="900">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,28,32,32">
+
+            <!-- Header -->
+            <StackPanel Margin="0,0,0,24">
+                <TextBlock Text="Screenshot" FontSize="26" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}"/>
+                <TextBlock Text="Native Windows GDI and DWM window capture engine" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <!-- Control Card -->
+            <Border Style="{StaticResource OrbitCard}" Margin="0,0,0,20">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Capture Target" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6"/>
+                        <ComboBox Text="{Binding Target}" Width="260" HorizontalAlignment="Left" IsEditable="False" Padding="8,6" Background="{StaticResource BgWhiteBrush}">
+                            <ComboBoxItem Content="Full Screen" IsSelected="True"/>
+                            <ComboBoxItem Content="Monitor"/>
+                            <ComboBoxItem Content="Active Window"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Content="Take Screenshot" Style="{StaticResource OrbitPrimaryButton}" Command="{Binding TakeScreenshotCommand}" Height="42" Padding="20,0" VerticalAlignment="Bottom"/>
+                </Grid>
+            </Border>
+
+            <!-- Preview Card -->
+            <Border Style="{StaticResource OrbitCard}" MinHeight="360" Background="{StaticResource BgSubtleBrush}">
+                <Grid>
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding HasScreenshot, Converter={x:Null}}">
+                        <Path Data="{StaticResource IconScreenshot}" Fill="{StaticResource TextMutedBrush}" Width="48" Height="48" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                        <TextBlock Text="No Screenshot Captured" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Click 'Take Screenshot' above or trigger via Orbit" FontSize="13" Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <StackPanel Visibility="{Binding HasScreenshot, Converter={x:Null}}">
+                        <Border CornerRadius="8" Background="{StaticResource BgWhiteBrush}" BorderThickness="1" BorderBrush="{StaticResource BorderLightBrush}" MaxHeight="400" Margin="0,0,0,16">
+                            <Image Source="{Binding PreviewImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        </Border>
+
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding ImageDimensions}" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource TextPrimaryBrush}"/>
+                                <TextBlock Text=" • " Foreground="{StaticResource TextSecondaryBrush}" FontSize="13"/>
+                                <TextBlock Text="{Binding ImageFileSize}" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="Copy" Style="{StaticResource OrbitSecondaryButton}" Command="{Binding CopyCommand}" Margin="0,0,8,0" Padding="14,6" FontSize="12"/>
+                                <Button Content="Show in Folder" Style="{StaticResource OrbitSecondaryButton}" Command="{Binding ShowInFolderCommand}" Margin="0,0,8,0" Padding="14,6" FontSize="12"/>
+                                <Button Content="Open Image" Style="{StaticResource OrbitPrimaryButton}" Command="{Binding OpenCommand}" Padding="14,6" FontSize="12"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

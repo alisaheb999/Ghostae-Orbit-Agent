@@ -1,0 +1,29 @@
+{
+  "id": "com.ghostae.orbit.premierebridge",
+  "name": "Ghostae Orbit Premiere Bridge",
+  "version": "1.0.0",
+  "main": "index.html",
+  "manifestVersion": 5,
+  "host": [
+    {
+      "app": "PPRO",
+      "minVersion": "22.0"
+    }
+  ],
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "orbitBridgePanel",
+      "name": "Ghostae Orbit Bridge"
+    }
+  ],
+  "requiredPermissions": {
+    "network": {
+      "domains": [
+        "http://127.0.0.1:18920",
+        "http://localhost:18920"
+      ]
+    },
+    "localFileSystem": "fullAccess"
+  }
+}
