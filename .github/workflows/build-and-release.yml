@@ -50,7 +50,7 @@ jobs:
           organization-id: 'fb31bf14-d213-4a51-9834-9f1480a0f32e'
           project-slug: 'Ghostae-Orbit-Agent'
           signing-policy-slug: 'Ghostae-Signing-Policy'
-          artifact-configuration-slug: 'pe-file'
+          artifact-configuration-slug: 'initial-version'
           github-token: '${{ secrets.GITHUB_TOKEN }}'
           input-artifact-filepath: './publish/unsigned-orbit-agent.zip'
           output-artifact-directory: './publish/signed'
