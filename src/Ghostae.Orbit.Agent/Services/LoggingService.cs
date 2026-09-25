@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Ghostae.Orbit.Agent.Models;
 
 namespace Ghostae.Orbit.Agent.Services
@@ -12,7 +13,13 @@ namespace Ghostae.Orbit.Agent.Services
         private static readonly Lazy<LoggingService> _instance = new(() => new LoggingService());
         public static LoggingService Instance => _instance.Value;
 
+        private readonly ConcurrentQueue<LogEntry> _logs = new();
+        private readonly int _maxInMemory = 500;
+        private readonly string _logFilePath;
+        private readonly object _fileLock = new();
         private readonly BlockingCollection<LogEntry> _fileWriteQueue = new(new ConcurrentQueue<LogEntry>(), 2000);
+
+        public event Action<LogEntry>? OnLogAdded;
 
         public LoggingService()
         {
