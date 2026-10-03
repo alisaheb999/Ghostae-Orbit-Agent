@@ -23,7 +23,10 @@
     "directories": {
       "output": "release"
     },
-    "asar": false,
+    "asar": true,
+    "asarUnpack": [
+      "backend/**/*"
+    ],
     "files": [
       "dist/**/*",
       "electron/**/*",

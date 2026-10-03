@@ -18,10 +18,6 @@ export const StoreView: React.FC = () => {
   });
 
   const handleProductClick = (product: ProductItem) => {
-    if (!currentUser) {
-      openAuthModal();
-      return;
-    }
     openProductDetail(product);
   };
 
@@ -67,12 +63,9 @@ export const StoreView: React.FC = () => {
             <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-lg bg-emerald-600 text-white font-bold text-[10px] shadow-sm uppercase tracking-wide">
               Installed
             </span>
-          ) : !currentUser ? (
-            <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-lg bg-black/60 backdrop-blur-xs text-white/90 font-medium text-[10px] shadow-sm flex items-center gap-1 border border-white/10">
-              <svg className="w-2.5 h-2.5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-              </svg>
-              <span>Locked</span>
+          ) : product.isOwned ? (
+            <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-[10px] shadow-sm border border-emerald-300">
+              Owned
             </span>
           ) : null}
         </div>
@@ -99,7 +92,7 @@ export const StoreView: React.FC = () => {
               }}
               className="px-4 py-1.5 bg-gray-50 group-hover:bg-[#0d7eff] text-gray-700 group-hover:text-white text-xs font-semibold rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
-              <span>{currentUser ? 'Details' : 'Sign In'}</span>
+              <span>{product.isOwned ? 'Install' : 'Details'}</span>
               <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                 <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
               </svg>

@@ -149,9 +149,58 @@ interface HubStoreState {
 }
 
 const INITIAL_PRODUCTS: ProductItem[] = [];
-
 const INITIAL_LICENSES: LicenseItem[] = [];
 const INITIAL_UPDATES: UpdateItem[] = [];
+
+/**
+ * Universal Multi-Layer Product Ownership Checker
+ * Checks slug normalization, ID match, product name, all-suite license, and local session
+ */
+export function checkIsProductOwned(
+  product: { id: string; slug: string; name?: string; isFree?: boolean },
+  licenses: Array<{ productId?: string; product_slug?: string; productName?: string; isEnabled?: boolean; status?: string; key?: string }>,
+  currentUser?: { isPro?: boolean } | null
+): boolean {
+  if (product.isFree) return true;
+  if (!licenses || !Array.isArray(licenses)) return false;
+
+  const normalize = (s?: string) => String(s || '').toLowerCase().replace(/^prod-/, '').replace(/^com\.ghostae\./, '').replace(/^ghostae-/, '').replace(/[^a-z0-9]/g, '');
+
+  const targetSlugNorm = normalize(product.slug);
+  const targetIdNorm = normalize(product.id);
+  const targetNameNorm = normalize(product.name);
+
+  return licenses.some(lic => {
+    if (lic.status === 'expired' || lic.status === 'suspended' || lic.isEnabled === false) {
+      return false;
+    }
+
+    const licSlugNorm = normalize(lic.productId || lic.product_slug);
+    const licNameNorm = normalize(lic.productName);
+
+    // 1. Exact or normalized slug/id match
+    if (licSlugNorm && (licSlugNorm === targetSlugNorm || licSlugNorm === targetIdNorm)) {
+      return true;
+    }
+
+    // 2. Full Suite / All-access license
+    if (licSlugNorm === 'all' || licSlugNorm === 'suite' || licSlugNorm === 'creativesuite' || licSlugNorm === 'full') {
+      return true;
+    }
+
+    // 3. Text Panel fuzzy match (e.g. "text", "ghosttext", "textanimation")
+    if (targetSlugNorm.includes('text') && (licSlugNorm.includes('text') || licNameNorm.includes('text'))) {
+      return true;
+    }
+
+    // 4. Name match
+    if (targetNameNorm && licNameNorm && (targetNameNorm === licNameNorm || licNameNorm.includes(targetNameNorm) || targetNameNorm.includes(licNameNorm))) {
+      return true;
+    }
+
+    return false;
+  });
+}
 
 function syncDesktopHubSession(userEmail: string, licenses: LicenseItem[]) {
   if (typeof window === 'undefined') return;
@@ -205,6 +254,8 @@ export const useHubStore = create<HubStoreState>()(
           const catalogRes = await GhostaeApiService.getCatalog(forceRefresh);
           if (catalogRes.status === 'success' && catalogRes.products) {
             const currentProducts = get().products;
+            const currentLicenses = get().licenses;
+            const currentUser = get().currentUser;
             const newUpdates: UpdateItem[] = [];
 
             const syncedProducts: ProductItem[] = catalogRes.products.map(cp => {
@@ -226,6 +277,8 @@ export const useHubStore = create<HubStoreState>()(
                 });
               }
 
+              const isOwned = checkIsProductOwned(cp, currentLicenses, currentUser);
+
               return {
                 id: cp.id || `prod-${cp.slug}`,
                 slug: cp.slug,
@@ -240,7 +293,7 @@ export const useHubStore = create<HubStoreState>()(
                 tagline: existing?.tagline || `${cp.name} for Adobe 2023+`,
                 description: existing?.description || `${cp.name} - official Ghostae extension for After Effects and Premiere Pro CC 2023 to latest.`,
                 changelog: cp.changelog || '',
-                isOwned: existing?.isOwned || cp.is_free,
+                isOwned: isOwned,
                 isInstalled,
                 hasUpdate,
                 targetHost: cp.target_host || 'AE',
@@ -310,10 +363,9 @@ export const useHubStore = create<HubStoreState>()(
               };
             });
 
-            // Flag owned products based strictly on real cloud purchases
+            // Flag owned products dynamically
             const updatedProds = currentProds.map(p => {
-              const owned = p.isFree || licRes.licenses!.some(l => l.product_slug === p.slug || l.product_slug === p.id);
-              return { ...p, isOwned: owned };
+              return { ...p, isOwned: checkIsProductOwned(p, mappedLicenses, get().currentUser) };
             });
 
             set({
@@ -372,7 +424,7 @@ export const useHubStore = create<HubStoreState>()(
 
           // Match owned products strictly by user's real purchases
           const updatedProducts = products.map(p => {
-            const owned = p.isFree || userLicenses.some(l => l.product_slug === p.slug || l.product_slug === p.id);
+            const owned = checkIsProductOwned(p, mappedLicenses, res.user);
             return { ...p, isOwned: owned };
           });
 
@@ -432,7 +484,7 @@ export const useHubStore = create<HubStoreState>()(
 
           // Match owned products strictly by user's real purchases
           const updatedProducts = products.map(p => {
-            const owned = p.isFree || userLicenses.some(l => l.product_slug === p.slug || l.product_slug === p.id);
+            const owned = checkIsProductOwned(p, mappedLicenses, res.user);
             return { ...p, isOwned: owned };
           });
 
@@ -520,12 +572,6 @@ export const useHubStore = create<HubStoreState>()(
       },
 
       openProductDetail: (product) => {
-        const { currentUser, openAuthModal, showToast } = get();
-        if (!currentUser) {
-          showToast("এক্সটেনশনের বিস্তারিত দেখতে ও ইনস্টল করতে প্রথমে সাইন ইন করুন।");
-          openAuthModal();
-          return;
-        }
         set({ selectedProductDetail: product });
       },
 

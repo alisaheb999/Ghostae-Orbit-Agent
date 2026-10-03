@@ -25,32 +25,10 @@ export const ProductDetailView: React.FC = () => {
     ? product.screenshots 
     : (product.image ? [{ url: product.image, title: `${product.name} Workflow Preview` }] : []);
 
-  // Prepare tutorials (supports cloud tutorials or smart defaults for the extension)
-  const tutorials: TutorialItem[] = product.tutorials && product.tutorials.length > 0
-    ? product.tutorials
-    : [
-        {
-          id: 'tut-1',
-          title: `Getting Started & Quick Setup Guide`,
-          url: `https://ghostae.com/tutorials/${product.slug}/getting-started`,
-          duration: '3:20 min',
-          thumbnail: product.image || ''
-        },
-        {
-          id: 'tut-2',
-          title: `Full Workflow, Animation & Features Overview`,
-          url: `https://ghostae.com/tutorials/${product.slug}/workflow`,
-          duration: '5:45 min',
-          thumbnail: product.image || ''
-        },
-        {
-          id: 'tut-3',
-          title: `Mastering Presets, Typography & Styles`,
-          url: `https://ghostae.com/tutorials/${product.slug}/pro-tips`,
-          duration: '4:10 min',
-          thumbnail: product.image || ''
-        }
-      ];
+  // Prepare tutorials (strictly real server tutorials only, NO demo/placeholder items)
+  const tutorials: TutorialItem[] = product.tutorials && Array.isArray(product.tutorials)
+    ? product.tutorials.filter(t => t.url && t.title && !t.url.includes('example'))
+    : [];
 
   const handleOpenTutorial = (tut: TutorialItem) => {
     if (typeof window !== 'undefined') {
@@ -360,8 +338,9 @@ export const ProductDetailView: React.FC = () => {
           </section>
         )}
 
-        {/* Video Tutorials Section (16:9 YouTube Aspect Ratio Thumbnails) */}
-        <section className="bg-white p-6 sm:p-7 rounded-3xl border border-gray-200/80 shadow-2xs space-y-4">
+        {/* Video Tutorials Section (Only rendered if cloud provides valid real tutorials) */}
+        {tutorials.length > 0 && (
+          <section className="bg-white p-6 sm:p-7 rounded-3xl border border-gray-200/80 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
@@ -433,6 +412,7 @@ export const ProductDetailView: React.FC = () => {
             ))}
           </div>
         </section>
+        )}
 
       </div>
 
