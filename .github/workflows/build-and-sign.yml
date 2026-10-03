@@ -45,11 +45,18 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path ./publish/ReleaseApp
-          $exeFile = Get-ChildItem -Path "./apps/desktop/release" -Filter "*.exe" -Exclude "*uninstaller*" | Select-Object -First 1
+          Write-Host "Searching for generated executable in ./apps/desktop/release..."
+          $candidates = Get-ChildItem -Path "./apps/desktop/release" -Recurse -File -Filter "*.exe" | Where-Object { $_.Name -notmatch "uninstaller|elevate" }
+          $exeFile = $candidates | Where-Object { $_.Name -match "Setup" } | Select-Object -First 1
+          if (-not $exeFile) {
+            $exeFile = $candidates | Select-Object -First 1
+          }
           if ($exeFile) {
             Copy-Item -Path $exeFile.FullName -Destination "./publish/ReleaseApp/Ghostae-Creative-Suite-Setup.exe" -Force
-            Write-Host "[SUCCESS] Installer found and copied: $($exeFile.Name)"
+            Write-Host "[SUCCESS] Installer found and copied: $($exeFile.FullName)"
           } else {
+            Write-Host "Files in release directory:"
+            Get-ChildItem -Path "./apps/desktop/release" -Recurse | Select-Object FullName
             Write-Error "Installer .exe was not generated."
             exit 1
           }
