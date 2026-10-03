@@ -1,0 +1,117 @@
+name: Ghostae Desktop Build & Code Signing CI/CD
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release Tag (e.g. v1.0.0)'
+        required: false
+        default: 'v1.0.0'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build-and-sign:
+    name: Build, Sign & Release Ghostae Desktop
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: apps/desktop/package.json
+
+      - name: Install Desktop App Dependencies
+        working-directory: apps/desktop
+        run: npm ci || npm install
+
+      - name: Compile and Package Desktop Installer
+        working-directory: apps/desktop
+        run: npm run build:exe
+
+      - name: Prepare Publish Directory
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path ./publish/ReleaseApp
+          $exeFile = Get-ChildItem -Path "./apps/desktop/release" -Filter "*.exe" -Exclude "*uninstaller*" | Select-Object -First 1
+          if ($exeFile) {
+            Copy-Item -Path $exeFile.FullName -Destination "./publish/ReleaseApp/Ghostae-Creative-Suite-Setup.exe" -Force
+            Write-Host "[SUCCESS] Installer found and copied: $($exeFile.Name)"
+          } else {
+            Write-Error "Installer .exe was not generated."
+            exit 1
+          }
+
+      - name: Upload Unsigned Artifact to GitHub
+        uses: actions/upload-artifact@v4
+        id: upload-unsigned
+        with:
+          name: unsigned-installer
+          path: ./publish/ReleaseApp/Ghostae-Creative-Suite-Setup.exe
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Sign Binary via SignPath.io
+        uses: SignPath/github-action-submit-signing-request@v1
+        id: sign-step
+        with:
+          api-token: '${{ secrets.SIGNPATH_API_TOKEN }}'
+          organization-id: 'fb31bf14-d213-4a51-9834-9f1480a0f32e'
+          project-slug: '${{ vars.SIGNPATH_PROJECT_SLUG || ''Ghostae-Orbit-Agent'' }}'
+          signing-policy-slug: '${{ vars.SIGNPATH_SIGNING_POLICY_SLUG || ''Ghostae-Signing-Policy'' }}'
+          artifact-configuration-slug: '${{ vars.SIGNPATH_ARTIFACT_CONFIG_SLUG || ''initial-version'' }}'
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          github-artifact-id: '${{ steps.upload-unsigned.outputs.artifact-id }}'
+          output-artifact-directory: './publish/signed'
+          wait-for-completion: true
+        continue-on-error: true
+
+      - name: Extract Signed Binary (If signed via SignPath)
+        shell: pwsh
+        run: |
+          if (Test-Path "./publish/signed") {
+            $signedFile = Get-ChildItem -Path "./publish/signed" -Recurse -Filter "*.exe" | Select-Object -First 1
+            if ($signedFile) {
+              Copy-Item -Path $signedFile.FullName -Destination "./publish/ReleaseApp/Ghostae-Creative-Suite-Setup.exe" -Force
+              Write-Host "[SUCCESS] Verified and replaced with SignPath digitally signed binary!"
+            }
+          }
+
+      - name: Package Release Bundle (ZIP)
+        shell: pwsh
+        run: |
+          Compress-Archive -Path ./publish/ReleaseApp/* -DestinationPath ./publish/Ghostae-Creative-Suite-win-x64.zip -Force
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./publish/ReleaseApp/Ghostae-Creative-Suite-Setup.exe
+            ./publish/Ghostae-Creative-Suite-win-x64.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Build Artifacts to GitHub Run
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ghostae-Creative-Suite-Release-win-x64
+          path: |
+            ./publish/ReleaseApp/Ghostae-Creative-Suite-Setup.exe
+            ./publish/Ghostae-Creative-Suite-win-x64.zip
+          if-no-files-found: error

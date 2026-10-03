@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExtensionManifest Version="10.0" ExtensionBundleId="com.creativesuite.hub.bridge" ExtensionBundleVersion="1.0.0"
+    ExtensionBundleName="Creative Suite Universal Bridge" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <ExtensionList>
+        <Extension Id="com.creativesuite.hub.bridge.panel" Version="1.0.0" />
+    </ExtensionList>
+    <ExecutionEnvironment>
+        <HostList>
+            <!-- Adobe After Effects (2021 through 2025+) -->
+            <Host Name="AEFT" Version="[18.0,26.9]" />
+            <!-- Adobe Premiere Pro (2021 through 2025+) -->
+            <Host Name="PPRO" Version="[15.0,26.9]" />
+        </HostList>
+        <LocaleList>
+            <Locale Code="All" />
+        </LocaleList>
+        <RequiredRuntimeList>
+            <RequiredRuntime Name="CSXS" Version="9.0" />
+        </RequiredRuntimeList>
+    </ExecutionEnvironment>
+    <DispatchInfoList>
+        <Extension Id="com.creativesuite.hub.bridge.panel">
+            <DispatchInfo>
+                <Resources>
+                    <MainPath>./client/index.html</MainPath>
+                    <ScriptPath>./jsx/dispatcher.jsx</ScriptPath>
+                    <CEFCommandLine>
+                        <Parameter>--enable-nodejs</Parameter>
+                        <Parameter>--mixed-context</Parameter>
+                    </CEFCommandLine>
+                </Resources>
+                <Lifecycle>
+                    <AutoVisible>true</AutoVisible>
+                    <StartOn>
+                        <!-- Start immediately when host app launches -->
+                        <Event>applicationBarInitialState</Event>
+                    </StartOn>
+                </Lifecycle>
+                <UI>
+                    <Type>Panel</Type>
+                    <Menu>Creative Suite Bridge</Menu>
+                    <Geometry>
+                        <Size>
+                            <Height>140</Height>
+                            <Width>240</Width>
+                        </Size>
+                        <MinSize>
+                            <Height>80</Height>
+                            <Width>180</Width>
+                        </MinSize>
+                    </Geometry>
+                </UI>
+            </DispatchInfo>
+        </Extension>
+    </DispatchInfoList>
+</ExtensionManifest>

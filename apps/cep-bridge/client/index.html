@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Suite Bridge</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #121217;
+            color: #d1d5db;
+            font-size: 11px;
+            padding: 10px;
+            user-select: none;
+            overflow: hidden;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .title {
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+        }
+        .connected { color: #10b981; }
+        .disconnected { color: #ef4444; }
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+        .info-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            padding: 8px;
+            margin-top: 6px;
+        }
+        .label { color: #9ca3af; }
+        .val { color: #f3f4f6; font-weight: 500; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span class="title">Creative Hub Bridge</span>
+        <div class="status-badge">
+            <span class="dot"></span>
+            <span id="bridge-status" class="disconnected">Initializing...</span>
+        </div>
+    </div>
+    <div class="info-box">
+        <div style="margin-bottom: 4px;"><span class="label">Host: </span><span id="host-info" class="val">Detecting...</span></div>
+        <div><span class="label">Port: </span><span class="val">127.0.0.1:49815</span></div>
+    </div>
+
+    <script src="CSInterface.js"></script>
+    <script src="bridge-client.js"></script>
+</body>
+</html>

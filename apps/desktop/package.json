@@ -1,0 +1,89 @@
+{
+  "name": "ghostae-creative-suite",
+  "productName": "Ghostae Creative Suite",
+  "version": "1.0.0",
+  "description": "Ghostae Creative Suite Hub - Official Desktop Manager for Adobe CEP Extensions",
+  "private": true,
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
+    "build:exe": "npm run build && electron-builder --win",
+    "dist": "npm run build && electron-builder",
+    "start:bridge": "node backend/standalone-server.js"
+  },
+  "build": {
+    "appId": "com.ghostae.creativesuite",
+    "productName": "Ghostae Creative Suite",
+    "copyright": "Copyright © 2026 Ghostae",
+    "compression": "maximum",
+    "directories": {
+      "output": "release"
+    },
+    "asar": false,
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "backend/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Ghostae Creative Suite"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "build/icon.png",
+      "category": "public.app-category.graphics-design"
+    }
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "@tanstack/react-virtual": "^3.13.2",
+    "adm-zip": "^0.5.16",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.16.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.6.0",
+    "ws": "^8.18.1",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^22.13.9",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@types/ws": "^8.5.14",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^9.1.2",
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.0",
+    "wait-on": "^8.0.2"
+  }
+}

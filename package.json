@@ -1,0 +1,9 @@
+{
+  "name": "creative-suite-hub-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix apps/desktop run dev",
+    "build": "npm --prefix apps/desktop run build"
+  }
+}

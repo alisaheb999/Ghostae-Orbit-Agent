@@ -1,0 +1,14 @@
+/**
+ * Ghostae Text V2 - Preset Definition
+ * Procedural Kinetic Typography for After Effects
+ */
+{
+  "name": "Ghostae Text V2",
+  "version": "2.1.0",
+  "type": "TEXT_V2",
+  "styles": [
+    { "id": "kinetic_slide", "name": "Kinetic Smooth Slide", "easing": "cubic-bezier(0.16, 1, 0.3, 1)" },
+    { "id": "typewriter_glitch", "name": "Glitch Typewriter", "sound_sync": true },
+    { "id": "elastic_overshoot", "name": "Elastic Bounce Overshoot", "frequency": 2.5, "decay": 4.0 }
+  ]
+}

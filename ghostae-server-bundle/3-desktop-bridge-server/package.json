@@ -1,0 +1,13 @@
+{
+  "name": "ghostae-bridge-server",
+  "version": "1.0.0",
+  "description": "Standalone Localhost Bridge & Hardware ID Server for Ghostae Desktop Hub",
+  "main": "standalone-server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node standalone-server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.1"
+  }
+}
