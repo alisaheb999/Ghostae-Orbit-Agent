@@ -909,8 +909,27 @@ export const useHubStore = create<HubStoreState>()(
 
 // Global IPC progress listener for real IDM-style byte-streaming metrics
 if (typeof window !== 'undefined' && window.ghostaeDesktop?.onInstallProgress) {
-  window.ghostaeDesktop.onInstallProgress((progressData) => {
-    const { slug, progress, downloadedMB, totalMB, speed, eta, status, isDone, error } = progressData;
+  window.ghostaeDesktop.onInstallProgress((progressData: any) => {
+    const slug = progressData.slug;
+    const rawProgress = progressData.progress ?? progressData.percent;
+    const progress = typeof rawProgress === 'number' ? Math.round(rawProgress) : 0;
+    const speed = progressData.speed || progressData.speedText || 'Calculating...';
+    const eta = progressData.eta || progressData.etaText || 'Calculating...';
+    const status = progressData.status || progressData.statusText || 'Downloading...';
+    
+    let downloadedMB = progressData.downloadedMB ? String(progressData.downloadedMB).trim() : '0 MB';
+    if (!downloadedMB.toUpperCase().includes('MB') && !downloadedMB.toUpperCase().includes('KB')) {
+      downloadedMB += ' MB';
+    }
+
+    let totalMB = progressData.totalMB ? String(progressData.totalMB).trim() : '';
+    if (totalMB && !totalMB.toUpperCase().includes('MB') && !totalMB.toUpperCase().includes('KB')) {
+      totalMB += ' MB';
+    }
+
+    const isDone = Boolean(progressData.isDone || progress >= 100);
+    const error = progressData.error;
+
     useHubStore.setState((state) => {
       const updatedProducts = state.products.map(p => {
         if (p.slug === slug || (p.cepFolderName && p.cepFolderName.includes(slug)) || p.id === slug) {

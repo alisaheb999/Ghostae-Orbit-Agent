@@ -82,13 +82,17 @@ async function downloadStreamWithProgress(url, headers = {}, onProgress = null) 
 
             onProgress({
                 percent,
+                progress: percent,
                 downloadedBytes: receivedBytes,
                 totalBytes,
-                downloadedMB,
-                totalMB,
+                downloadedMB: `${downloadedMB} MB`,
+                totalMB: `${totalMB} MB`,
                 speedText,
+                speed: speedText,
                 etaText,
-                statusText: `Downloading: ${downloadedMB} MB / ${totalMB} MB (${percent}%) • ${speedText} • ${etaText}`
+                eta: etaText,
+                statusText: `Downloading: ${downloadedMB} MB / ${totalMB} MB (${percent}%) • ${speedText} • ${etaText}`,
+                status: `Downloading: ${downloadedMB} MB / ${totalMB} MB (${percent}%) • ${speedText} • ${etaText}`
             });
         }
     }
@@ -253,9 +257,15 @@ export async function installPackageFromUrl({ slug, downloadUrl, expectedChecksu
         if (onProgress) {
             onProgress({
                 percent: 98,
+                progress: 98,
                 statusText: 'Extracting and deploying files to Adobe CEP directory...',
+                status: 'Extracting and deploying files to Adobe CEP directory...',
                 speedText: 'Extracting...',
-                etaText: 'Finalizing...'
+                speed: 'Extracting...',
+                etaText: 'Finalizing...',
+                eta: 'Finalizing...',
+                downloadedMB: `${(buffer.length / (1024 * 1024)).toFixed(1)} MB`,
+                totalMB: `${(buffer.length / (1024 * 1024)).toFixed(1)} MB`
             });
         }
 
@@ -289,9 +299,14 @@ export async function installPackageFromUrl({ slug, downloadUrl, expectedChecksu
         if (onProgress) {
             onProgress({
                 percent: 100,
+                progress: 100,
+                isDone: true,
                 statusText: 'Installation complete!',
-                speedText: 'Done',
-                etaText: 'Complete'
+                status: 'Installation complete!',
+                speedText: 'Complete',
+                speed: 'Complete',
+                etaText: 'Done',
+                eta: 'Done'
             });
         }
 
