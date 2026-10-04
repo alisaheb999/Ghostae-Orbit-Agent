@@ -52,6 +52,29 @@ export interface CatalogScreenshotItem {
   title?: string;
 }
 
+export interface CatalogHostScreenshots {
+  ae: CatalogScreenshotItem[];
+  pr: CatalogScreenshotItem[];
+}
+
+export interface CatalogShowcaseData {
+  presets_count: string;
+  templates_count: string;
+  emojis_count: string;
+  items?: Array<{
+    id: string;
+    title: string;
+    category: 'presets' | 'templates' | 'emojis';
+    previewUrl?: string;
+    tag?: string;
+  }>;
+}
+
+export interface CatalogFaqItem {
+  q: string;
+  a: string;
+}
+
 export interface CatalogTutorialItem {
   id?: string;
   title: string;
@@ -67,15 +90,22 @@ export interface CatalogProduct {
   category: string;
   latest_version: string;
   price_bdt: number;
+  original_price_bdt?: number;
   is_free: boolean;
   target_host: 'AE' | 'PPRO' | 'BOTH';
+  target_app?: 'dual' | 'ae' | 'pr';
   min_ae_version: number;
   thumbnail_url: string;
   download_url: string;
   cep_folder_name: string;
   changelog: string;
   description?: string;
+  short_desc?: string;
   screenshots?: CatalogScreenshotItem[];
+  host_screenshots?: CatalogHostScreenshots;
+  showcase?: CatalogShowcaseData;
+  faq?: CatalogFaqItem[];
+  whatsapp_url?: string;
   tutorials?: CatalogTutorialItem[];
   features?: Array<{ title: string; desc: string }>;
 }
@@ -601,24 +631,108 @@ export const GhostaeApiService = {
         if (rawHost.includes('premiere') || rawHost === 'ppro') targetHost = 'PPRO';
         else if (rawHost.includes('both') || (rawHost.includes('ae') && rawHost.includes('pr'))) targetHost = 'BOTH';
 
-        // Handle is_free & price_bdt (with fallback for paid releases)
+        // Handle is_free & prices
         const isFree = Boolean(p.is_free ?? p.isFree ?? false);
-        let priceBDT = Number(p.price_bdt ?? p.priceBDT ?? p.price ?? 0);
+        let priceBDT = Number(p.price ?? p.price_bdt ?? p.priceBDT ?? 0);
         if (!isFree && priceBDT === 0) {
-          priceBDT = 499; // Standard catalog fallback price for paid extensions
+          priceBDT = 349; // Special offer price for paid extensions
+        }
+        let originalPriceBDT = Number(p.original_price ?? p.original_price_bdt ?? p.originalPriceBDT ?? 0);
+        if (!isFree && originalPriceBDT === 0) {
+          originalPriceBDT = 499; // Standard regular price
         }
 
         // Handle thumbnail_url - strictly from server, never inject dummy demo images
         const thumbnailUrl = p.thumbnail_url || p.thumbnailUrl || p.image || '';
 
-        // Handle screenshots array or gallery
-        const rawScreenshots = p.screenshots || p.gallery || p.screenshot_urls || [];
-        const normalizedScreenshots = Array.isArray(rawScreenshots) ? rawScreenshots.map((s: any, idx: number) => {
-          if (typeof s === 'string') return { url: s, title: `Preview ${idx + 1}` };
-          return { url: s.url || s.image_url || '', title: s.title || `Preview ${idx + 1}` };
-        }).filter((s: any) => Boolean(s.url)) : [];
+        // Default Official AE Screenshots
+        const DEFAULT_AE_SCREENSHOTS: CatalogScreenshotItem[] = [
+          { url: "https://i.postimg.cc/52ZfTR2W/ae1.png", title: "After Effects — Main Animation Browser" },
+          { url: "https://i.postimg.cc/85z11v5k/ae2.png", title: "After Effects — Typography Presets" },
+          { url: "https://i.postimg.cc/fRPV4kwh/ae3.png", title: "After Effects — Motion Titles" },
+          { url: "https://i.postimg.cc/prgqjQG0/ae4.png", title: "After Effects — Kinetic Text Engine" },
+          { url: "https://i.postimg.cc/J0vH8f7F/ae5.png", title: "After Effects — 3D Animated Emojis" },
+          { url: "https://i.postimg.cc/c1nK2h88/ae6.png", title: "After Effects — Custom Easing Controller" },
+          { url: "https://i.postimg.cc/y8m0Y76t/ae7.png", title: "After Effects — 1-Click Apply & Live Preview" }
+        ];
 
-        // Handle video tutorials (supports array of 4-5 videos or single tutorial_url / video_url)
+        // Default Official Premiere Pro Screenshots
+        const DEFAULT_PR_SCREENSHOTS: CatalogScreenshotItem[] = [
+          { url: "https://i.postimg.cc/0QvP2KSG/Screenshot-1.png", title: "Premiere Pro — Caption & Subtitle Generator" },
+          { url: "https://i.postimg.cc/j2P7w5rX/Screenshot-2.png", title: "Premiere Pro — Social Media Titles" },
+          { url: "https://i.postimg.cc/hGv5M6nZ/Screenshot-3.png", title: "Premiere Pro — Lower Thirds & Callouts" },
+          { url: "https://i.postimg.cc/0jK0T8rC/Screenshot-4.png", title: "Premiere Pro — Fast Render Motion Packs" },
+          { url: "https://i.postimg.cc/T3P8nJgQ/Screenshot-5.png", title: "Premiere Pro — Neon & Glitch Effects" },
+          { url: "https://i.postimg.cc/8kv2X1hP/Screenshot-6.png", title: "Premiere Pro — Responsive MOGRT Controls" },
+          { url: "https://i.postimg.cc/50tDkXG1/Screenshot-7.png", title: "Premiere Pro — 1-Click Timeline Insertion" }
+        ];
+
+        // Handle host-segmented screenshots
+        let hostScreenshots: CatalogHostScreenshots = {
+          ae: DEFAULT_AE_SCREENSHOTS,
+          pr: DEFAULT_PR_SCREENSHOTS
+        };
+
+        if (p.screenshots && typeof p.screenshots === 'object' && !Array.isArray(p.screenshots)) {
+          if (Array.isArray(p.screenshots.ae) && p.screenshots.ae.length > 0) {
+            hostScreenshots.ae = p.screenshots.ae.map((s: any, idx: number) => ({
+              url: typeof s === 'string' ? s : (s.src || s.url || ''),
+              title: s.title || `AE Interface Preview ${idx + 1}`
+            })).filter((s: any) => Boolean(s.url));
+          }
+          if (Array.isArray(p.screenshots.pr) && p.screenshots.pr.length > 0) {
+            hostScreenshots.pr = p.screenshots.pr.map((s: any, idx: number) => ({
+              url: typeof s === 'string' ? s : (s.src || s.url || ''),
+              title: s.title || `PR Interface Preview ${idx + 1}`
+            })).filter((s: any) => Boolean(s.url));
+          }
+        }
+
+        // Flat screenshots list for general gallery/lightbox
+        const rawScreenshots = Array.isArray(p.screenshots) ? p.screenshots : (p.gallery || p.screenshot_urls || []);
+        const normalizedScreenshots = Array.isArray(rawScreenshots) && rawScreenshots.length > 0
+          ? rawScreenshots.map((s: any, idx: number) => {
+              if (typeof s === 'string') return { url: s, title: `Preview ${idx + 1}` };
+              return { url: s.url || s.image_url || s.src || '', title: s.title || `Preview ${idx + 1}` };
+            }).filter((s: any) => Boolean(s.url))
+          : [...hostScreenshots.ae, ...hostScreenshots.pr];
+
+        // Handle Showcase Data (Counts & Preview Cards)
+        const showcase: CatalogShowcaseData = {
+          presets_count: p.showcase?.presets_count || "110+",
+          templates_count: p.showcase?.templates_count || "120+",
+          emojis_count: p.showcase?.emojis_count || "200+",
+          items: p.showcase?.items || []
+        };
+
+        // Handle Official FAQ
+        const DEFAULT_FAQS: CatalogFaqItem[] = [
+          {
+            q: "এটা কি প্রিমিয়ার প্রো এবং আফটার ইফেক্টস দুইটাতেই কাজ করবে?",
+            a: "হ্যাঁ, একক লাইসেন্সেই আপনি আফটার ইফেক্টস এবং প্রিমিয়ার প্রো দুটি সফটওয়্যারেই সম্পূর্ণ ফিচার ব্যবহার করতে পারবেন।"
+          },
+          {
+            q: "কোন কোন ভার্সনে এটি সাপোর্ট করবে?",
+            a: "Adobe Premiere Pro CC 2023 থেকে 2026+ এবং Adobe After Effects CC 2023 থেকে 2026+ যেকোনো ভার্সনে সরাসরি কাজ করে।"
+          },
+          {
+            q: "ইন্সটল কীভাবে করতে হবে?",
+            a: "Ghostae Creative Suite অ্যাপের ভেতরে 'INSTALL' বাটনে ক্লিক করলেই এক ক্লিকে সরাসরি Adobe-এর অফিশিয়াল CEP ডিরেক্টরিতে ইন্সটল হয়ে যাবে। কোনো ম্যানুয়াল আনজিপ বা CMD স্ক্রিপ্ট চালাতে হবে না।"
+          },
+          {
+            q: "ইন্টারনেট কানেকশন ছাড়া কি সফটওয়্যারটি ব্যবহার করা যাবে?",
+            a: "হ্যাঁ! Ghostae-তে ৩০ দিনের অফলাইন গ্রেস পিরিয়ড রয়েছে। একবার সাইন-ইন করে নিলে ইন্টারনেট সংযোগ ছাড়াই আপনি টানা কাজ চালিয়ে যেতে পারবেন।"
+          },
+          {
+            q: "ভবিষ্যতে কি কোনো নতুন আপডেট বা অ্যানিমেশন যুক্ত হবে?",
+            a: "হ্যাঁ, আমরা নিয়মিত নতুন অ্যানিমেশন প্রিসেট এবং টেমপ্লেট যুক্ত করি। সমস্ত ভবিষ্যৎ আপডেট আপনি সম্পূর্ণ বিনামূল্যে এই অ্যাপের ভেতর থেকেই ১-ক্লিকে পাবেন।"
+          }
+        ];
+
+        const faq: CatalogFaqItem[] = Array.isArray(p.faq) && p.faq.length > 0 ? p.faq : DEFAULT_FAQS;
+        const whatsappUrl = p.whatsapp_url || "https://chat.whatsapp.com/GhostaeVIP";
+
+        // Handle video tutorials (supports array of videos or single tutorial_url / video_url)
         const rawTutorials = p.tutorials || p.video_tutorials || p.videos || [];
         let normalizedTutorials: Array<{ id?: string; title: string; url: string; duration?: string; thumbnail?: string }> = [];
         
@@ -652,16 +766,23 @@ export const GhostaeApiService = {
           name: p.name || (slug === 'text' ? 'Ghostae Text' : 'Ghostae Extension'),
           category: p.category || (slug === 'text' ? 'Text Animation Panel' : 'Creative Extension'),
           price_bdt: priceBDT,
+          original_price_bdt: originalPriceBDT,
           is_free: isFree,
           latest_version: version,
           target_host: targetHost,
+          target_app: p.target_app || (targetHost === 'BOTH' ? 'dual' : targetHost === 'PPRO' ? 'pr' : 'ae'),
           min_ae_version: p.min_ae_version || 2023,
           thumbnail_url: thumbnailUrl,
           download_url: downloadUrl,
           cep_folder_name: p.cep_folder_name || p.cepFolderName || (slug === 'text' ? 'com.text' : `com.ghostae.${slug}`),
           changelog: p.changelog || p.release_notes || p.releaseNotes || '',
           description: p.description || p.short_description || '',
+          short_desc: p.short_desc || p.short_description || 'After Effects ও Premiere Pro-এর জন্য আল্টিমেট টেক্সট ও ক্যাপশন ইঞ্জিন',
           screenshots: normalizedScreenshots,
+          host_screenshots: hostScreenshots,
+          showcase: showcase,
+          faq: faq,
+          whatsapp_url: whatsappUrl,
           tutorials: normalizedTutorials,
           features: Array.isArray(p.features) ? p.features : []
         };

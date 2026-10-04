@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useHubStore, TutorialItem } from '../../stores/useHubStore';
+import { useHubStore, TutorialItem, ScreenshotItem, FaqItem } from '../../stores/useHubStore';
 
 export const ProductDetailView: React.FC = () => {
   const { 
@@ -12,7 +12,12 @@ export const ProductDetailView: React.FC = () => {
     showToast
   } = useHubStore();
 
+  const [activeHostTab, setActiveHostTab] = useState<'ae' | 'pr'>('ae');
   const [lightboxImageIdx, setLightboxImageIdx] = useState<number | null>(null);
+  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0);
+  const [isShowcaseModalOpen, setIsShowcaseModalOpen] = useState(false);
+  const [showcaseCategory, setShowcaseCategory] = useState<'all' | 'presets' | 'templates' | 'emojis'>('all');
+  const [showcaseSearch, setShowcaseSearch] = useState('');
 
   if (!selectedProductDetail) return null;
   const product = selectedProductDetail;
@@ -20,47 +25,178 @@ export const ProductDetailView: React.FC = () => {
   const isInstalling = product.isInstalling || false;
   const progress = product.installProgress || 0;
 
-  // Prepare screenshots list (use server screenshots or default product image)
-  const screenshots = product.screenshots && product.screenshots.length > 0 
-    ? product.screenshots 
-    : (product.image ? [{ url: product.image, title: `${product.name} Workflow Preview` }] : []);
+  // 1. Host-Specific Screenshots
+  const aeScreenshots: ScreenshotItem[] = product.hostScreenshots?.ae && product.hostScreenshots.ae.length > 0
+    ? product.hostScreenshots.ae
+    : [
+        { url: "https://i.postimg.cc/52ZfTR2W/ae1.png", title: "After Effects — Main Animation Browser" },
+        { url: "https://i.postimg.cc/85z11v5k/ae2.png", title: "After Effects — Typography Presets" },
+        { url: "https://i.postimg.cc/fRPV4kwh/ae3.png", title: "After Effects — Motion Titles" },
+        { url: "https://i.postimg.cc/prgqjQG0/ae4.png", title: "After Effects — Kinetic Text Engine" },
+        { url: "https://i.postimg.cc/J0vH8f7F/ae5.png", title: "After Effects — 3D Animated Emojis" },
+        { url: "https://i.postimg.cc/c1nK2h88/ae6.png", title: "After Effects — Custom Easing Controller" },
+        { url: "https://i.postimg.cc/y8m0Y76t/ae7.png", title: "After Effects — 1-Click Apply & Live Preview" }
+      ];
 
-  // Prepare tutorials (strictly real server tutorials only, NO demo/placeholder items)
-  const tutorials: TutorialItem[] = product.tutorials && Array.isArray(product.tutorials)
-    ? product.tutorials.filter(t => t.url && t.title && !t.url.includes('example'))
-    : [];
+  const prScreenshots: ScreenshotItem[] = product.hostScreenshots?.pr && product.hostScreenshots.pr.length > 0
+    ? product.hostScreenshots.pr
+    : [
+        { url: "https://i.postimg.cc/0QvP2KSG/Screenshot-1.png", title: "Premiere Pro — Caption & Subtitle Generator" },
+        { url: "https://i.postimg.cc/j2P7w5rX/Screenshot-2.png", title: "Premiere Pro — Social Media Titles" },
+        { url: "https://i.postimg.cc/hGv5M6nZ/Screenshot-3.png", title: "Premiere Pro — Lower Thirds & Callouts" },
+        { url: "https://i.postimg.cc/0jK0T8rC/Screenshot-4.png", title: "Premiere Pro — Fast Render Motion Packs" },
+        { url: "https://i.postimg.cc/T3P8nJgQ/Screenshot-5.png", title: "Premiere Pro — Neon & Glitch Effects" },
+        { url: "https://i.postimg.cc/8kv2X1hP/Screenshot-6.png", title: "Premiere Pro — Responsive MOGRT Controls" },
+        { url: "https://i.postimg.cc/50tDkXG1/Screenshot-7.png", title: "Premiere Pro — 1-Click Timeline Insertion" }
+      ];
 
-  const handleOpenTutorial = (tut: TutorialItem) => {
+  const currentGallery = activeHostTab === 'ae' ? aeScreenshots : prScreenshots;
+
+  // 2. Showcase Items Definition
+  const showcaseData = product.showcase || {
+    presets_count: "110+",
+    templates_count: "120+",
+    emojis_count: "200+"
+  };
+
+  const sampleShowcaseCards = [
+    {
+      id: 'sc-1',
+      title: 'Kinetic Typography Engine',
+      category: 'presets' as const,
+      tag: '110+ Presets',
+      desc: 'স্মুথ স্লাইড, ইলাস্টিক বাউন্স ও কাইনেটিক মোশন ফিজিক্স।',
+      gradient: 'from-blue-600/30 via-indigo-600/20 to-slate-900',
+      accentColor: 'text-blue-400',
+      icon: '⚡'
+    },
+    {
+      id: 'sc-2',
+      title: 'Auto Subtitle & Caption Styler',
+      category: 'templates' as const,
+      tag: '120+ Titles',
+      desc: 'প্রিমিয়ার প্রো এবং আফটার ইফেক্টসে অটো সাবটাইটেল অ্যানিমেশন।',
+      gradient: 'from-emerald-600/30 via-teal-600/20 to-slate-900',
+      accentColor: 'text-emerald-400',
+      icon: '📝'
+    },
+    {
+      id: 'sc-3',
+      title: 'Modern Social Media Lower Thirds',
+      category: 'templates' as const,
+      tag: 'Social Ready',
+      desc: 'YouTube, Facebook, Reels ও Shorts-এর জন্য আল্ট্রা মডার্ন লোয়ার থার্ড।',
+      gradient: 'from-purple-600/30 via-pink-600/20 to-slate-900',
+      accentColor: 'text-purple-400',
+      icon: '🎬'
+    },
+    {
+      id: 'sc-4',
+      title: 'Neon Glow & Cyberpunk Presets',
+      category: 'presets' as const,
+      tag: 'Vibrant FX',
+      desc: 'ডাইনামিক ফ্লিকার, নিয়ন গ্লো এবং টেক গ্লিচ টেক্সট অ্যানিমেশন।',
+      gradient: 'from-cyan-600/30 via-blue-600/20 to-slate-900',
+      accentColor: 'text-cyan-400',
+      icon: '✨'
+    },
+    {
+      id: 'sc-5',
+      title: '3D Animated Reactions & Emojis',
+      category: 'emojis' as const,
+      tag: '200+ 3D Emojis',
+      desc: 'হাই-রেজুলেশন ৩ডি অ্যানিমেটেড ইমোজি কালেকশন।',
+      gradient: 'from-amber-600/30 via-orange-600/20 to-slate-900',
+      accentColor: 'text-amber-400',
+      icon: '🔥'
+    },
+    {
+      id: 'sc-6',
+      title: 'Elastic Spring Bounce Lettering',
+      category: 'presets' as const,
+      tag: 'Smooth Physics',
+      desc: 'প্রতিটি অক্ষরের জন্য ন্যাচারাল স্প্রিং বাউন্স ও ট্রানজিশন ইঞ্জিন।',
+      gradient: 'from-rose-600/30 via-pink-600/20 to-slate-900',
+      accentColor: 'text-rose-400',
+      icon: '🎯'
+    }
+  ];
+
+  const fullShowcaseLibrary = [
+    ...sampleShowcaseCards,
+    { id: 'sc-7', title: 'Minimal Corporate Titles', category: 'templates' as const, tag: 'Clean & Sharp', desc: 'ক্লিন কর্পোরেট ভিডিও টাইটেল ও লোয়ার থার্ড।', gradient: 'from-slate-700/40 to-slate-900', accentColor: 'text-slate-300', icon: '💼' },
+    { id: 'sc-8', title: 'Glitch Text Distortion', category: 'presets' as const, tag: 'Cyberpunk', desc: 'অ্যালগরিদমিক সাইবারপাঙ্ক ও ভিএইচএস গ্লিচ টেক্সট।', gradient: 'from-fuchsia-600/30 to-slate-900', accentColor: 'text-fuchsia-400', icon: '👾' },
+    { id: 'sc-9', title: 'Heart Pulse & Love Reactions', category: 'emojis' as const, tag: '3D Packs', desc: 'লাভ এবং হার্টবিট রিয়েকশন এনিমেশন।', gradient: 'from-red-600/30 to-slate-900', accentColor: 'text-red-400', icon: '💖' },
+    { id: 'sc-10', title: 'Rocket Launch & Trending Badges', category: 'emojis' as const, tag: 'Viral Emojis', desc: 'রকেট স্পিড ও ভাইরাল সোশ্যাল ব্যাজ।', gradient: 'from-orange-600/30 to-slate-900', accentColor: 'text-orange-400', icon: '🚀' },
+    { id: 'sc-11', title: 'Typewriter Sound Sync FX', category: 'presets' as const, tag: 'Classic Type', desc: 'স্মুথ কার্সার টাইপরাইটার অ্যানিমেশন।', gradient: 'from-sky-600/30 to-slate-900', accentColor: 'text-sky-400', icon: '⌨️' },
+    { id: 'sc-12', title: 'Cinematic Movie Trailer Credits', category: 'templates' as const, tag: '4K Cinematic', desc: 'সিনেমাটিক ট্রেলার ও মুভি ক্রেডিটস টেমপ্লেট।', gradient: 'from-amber-700/30 to-slate-900', accentColor: 'text-amber-300', icon: '🎥' }
+  ];
+
+  const filteredShowcaseItems = fullShowcaseLibrary.filter(item => {
+    const matchesCategory = showcaseCategory === 'all' || item.category === showcaseCategory;
+    const matchesSearch = item.title.toLowerCase().includes(showcaseSearch.toLowerCase()) || item.desc.toLowerCase().includes(showcaseSearch.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  // 3. Official FAQs
+  const faqs: FaqItem[] = product.faq && product.faq.length > 0 ? product.faq : [
+    {
+      q: "এটা কি প্রিমিয়ার প্রো এবং আফটার ইফেক্টস দুইটাতেই কাজ করবে?",
+      a: "হ্যাঁ, একক লাইসেন্সেই আপনি আফটার ইফেক্টস এবং প্রিমিয়ার প্রো দুটি সফটওয়্যারেই সম্পূর্ণ ফিচার ব্যবহার করতে পারবেন।"
+    },
+    {
+      q: "কোন কোন ভার্সনে এটি সাপোর্ট করবে?",
+      a: "Adobe Premiere Pro CC 2023 থেকে 2026+ এবং Adobe After Effects CC 2023 থেকে 2026+ যেকোনো ভার্সনে সরাসরি কাজ করে।"
+    },
+    {
+      q: "ইন্সটল কীভাবে করতে হবে?",
+      a: "Ghostae Creative Suite অ্যাপের ভেতরে 'INSTALL' বাটনে ক্লিক করলেই এক ক্লিকে সরাসরি Adobe-এর অফিশিয়াল CEP ডিরেক্টরিতে ইন্সটল হয়ে যাবে। কোনো ম্যানুয়াল আনজিপ বা CMD স্ক্রিপ্ট চালাতে হবে না।"
+    },
+    {
+      q: "ইন্টারনেট কানেকশন ছাড়া কি সফটওয়্যারটি ব্যবহার করা যাবে?",
+      a: "হ্যাঁ! Ghostae-তে ৩০ দিনের সাইনড অফলাইন গ্রেস পিরিয়ড রয়েছে। একবার সাইন-ইন করে নিলে ইন্টারনেট সংযোগ ছাড়াই আপনি টানা কাজ চালিয়ে যেতে পারবেন।"
+    },
+    {
+      q: "ভবিষ্যতে কি কোনো নতুন আপডেট বা অ্যানিমেশন যুক্ত হবে?",
+      a: "হ্যাঁ, আমরা নিয়মিত নতুন অ্যানিমেশন প্রিসেট এবং টেমপ্লেট যুক্ত করি। সমস্ত ভবিষ্যৎ আপডেট আপনি সম্পূর্ণ বিনামূল্যে এই অ্যাপের ভেতর থেকেই ১-ক্লিকে পাবেন।"
+    }
+  ];
+
+  const whatsappUrl = product.whatsappUrl || "https://chat.whatsapp.com/GhostaeVIP";
+
+  const handleOpenExternal = (url: string, title?: string) => {
     if (typeof window !== 'undefined') {
       const desktop = window.ghostaeDesktop;
       if (desktop && typeof desktop.openExternal === 'function') {
-        desktop.openExternal(tut.url);
+        desktop.openExternal(url);
       } else {
-        window.open(tut.url, '_blank');
+        window.open(url, '_blank');
       }
     }
-    showToast(`টিউটোরিয়াল লিংক ব্রাউজারে ওপেন করা হয়েছে: ${tut.title}`);
+    if (title) showToast(`${title} ওপেন করা হয়েছে।`);
   };
 
   const nextLightboxImage = () => {
-    if (lightboxImageIdx === null || screenshots.length === 0) return;
-    setLightboxImageIdx((lightboxImageIdx + 1) % screenshots.length);
+    if (lightboxImageIdx === null || currentGallery.length === 0) return;
+    setLightboxImageIdx((lightboxImageIdx + 1) % currentGallery.length);
   };
 
   const prevLightboxImage = () => {
-    if (lightboxImageIdx === null || screenshots.length === 0) return;
-    setLightboxImageIdx((lightboxImageIdx - 1 + screenshots.length) % screenshots.length);
+    if (lightboxImageIdx === null || currentGallery.length === 0) return;
+    setLightboxImageIdx((lightboxImageIdx - 1 + currentGallery.length) % currentGallery.length);
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#fafbfe] view-enter select-none">
-      <div className="max-w-6xl mx-auto px-6 md:px-12 py-8 space-y-8">
+    <div className="flex-1 overflow-y-auto bg-[#fafbfe] view-enter select-none pb-16">
+      <div className="max-w-6xl mx-auto px-6 md:px-12 py-8 space-y-10">
         
-        {/* Top Navigation & Action Header */}
-        <div className="flex items-center justify-between pb-5 border-b border-gray-200/80">
+        {/* =========================================================
+            1. TOP NAVIGATION & HERO ACTION BAR
+        ========================================================= */}
+        <div className="flex items-center justify-between pb-4 border-b border-gray-200/80">
           <button 
             onClick={closeProductDetail}
-            className="group flex items-center gap-2 text-xs font-bold text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 px-4 py-2 rounded-xl border border-gray-200 transition shadow-2xs active:scale-95 cursor-pointer"
+            className="group flex items-center gap-2 text-xs font-bold text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-200 transition shadow-2xs active:scale-95 cursor-pointer"
           >
             <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/>
@@ -68,7 +204,7 @@ export const ProductDetailView: React.FC = () => {
             <span>Back to Store</span>
           </button>
 
-          {/* Action Buttons: Open in Adobe / Install / Buy Now */}
+          {/* Action Header Button: Open in Adobe / Install / Buy Now */}
           <div className="flex items-center gap-3">
             {product.isInstalled ? (
               <div className="flex items-center gap-2.5">
@@ -129,16 +265,14 @@ export const ProductDetailView: React.FC = () => {
                 <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                   <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
                 </svg>
-                <span>BUY NOW — {product.priceBDT} BDT</span>
+                <span>BUY NOW — ৳{product.priceBDT} BDT</span>
               </button>
             ) : (
               <div className="flex items-center gap-3">
-                {product.isOwned && !product.isFree && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span>✓ PURCHASED</span>
-                  </span>
-                )}
+                <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>✓ PURCHASED</span>
+                </span>
                 <button
                   onClick={() => installExtensionToCEP(product.id)}
                   className="px-8 py-2.5 bg-[#0d7eff] hover:bg-[#026be5] text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition active:scale-95 cursor-pointer"
@@ -153,56 +287,92 @@ export const ProductDetailView: React.FC = () => {
           </div>
         </div>
 
-        {/* Product Identity Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-white p-6 sm:p-7 rounded-3xl border border-gray-200/80 shadow-2xs">
-          <div className="flex items-center gap-5">
-            {product.image ? (
-              <img 
-                src={product.image} 
-                alt={product.name}
-                className="w-20 h-20 rounded-2xl object-cover shadow-2xs border border-gray-200/80 shrink-0" 
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = './icon.png';
-                  (e.target as HTMLImageElement).className = 'w-20 h-20 rounded-2xl p-4 object-contain bg-slate-900 grayscale opacity-40 border border-slate-700 shrink-0';
-                }}
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 shadow-2xs">
-                <img src="./icon.png" alt="Ghostae" className="w-10 h-10 grayscale opacity-40 object-contain" />
+        {/* =========================================================
+            HERO CARD & DYNAMIC PRICING OVERVIEW
+        ========================================================= */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-white via-white to-blue-50/40 p-7 sm:p-9 rounded-3xl border border-gray-200/90 shadow-sm">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+            
+            {/* Identity & Host Badges */}
+            <div className="flex items-start sm:items-center gap-6">
+              {product.image ? (
+                <img 
+                  src={product.image} 
+                  alt={product.name}
+                  className="w-22 h-22 rounded-2xl object-cover shadow-md border border-gray-200 shrink-0" 
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = './icon.png';
+                  }}
+                />
+              ) : (
+                <div className="w-22 h-22 rounded-2xl bg-gradient-to-br from-slate-900 to-[#0d1b38] border border-blue-500/20 flex items-center justify-center shrink-0 shadow-md">
+                  <img src="./icon.png" alt="Ghostae" className="w-12 h-12 object-contain" />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+                    {product.name}
+                  </h1>
+                  
+                  {/* Host Compatibility Badge */}
+                  <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold text-[11px] shadow-xs tracking-wide uppercase">
+                    {product.targetHost === 'BOTH' || product.targetApp === 'dual' ? 'Dual Host (AE & Premiere Pro)' : product.targetHost === 'PPRO' ? 'Premiere Pro' : 'After Effects'}
+                  </span>
+
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-mono text-xs font-bold border border-slate-200">
+                    v{product.latestVersion || product.version}
+                  </span>
+
+                  {product.isInstalled && (
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      <span>Installed</span>
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-sm text-gray-600 font-medium max-w-2xl leading-relaxed">
+                  {product.shortDesc || product.tagline || 'After Effects ও Premiere Pro-এর জন্য আল্টিমেট টেক্সট ও ক্যাপশন ইঞ্জিন'}
+                </p>
+
+                <div className="flex items-center gap-3 pt-1 text-xs text-gray-500 font-medium">
+                  <span>⚡ Instant 1-Click CEP Installation</span>
+                  <span>•</span>
+                  <span>🔒 30-Day Offline Grace Mode</span>
+                  <span>•</span>
+                  <span>♾️ Lifetime License</span>
+                </div>
               </div>
-            )}
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{product.name}</h1>
-                <span className="px-2 py-0.5 rounded-md bg-blue-50 text-[#0d7eff] font-mono text-xs font-bold border border-blue-100">
-                  v{product.version}
+            </div>
+
+            {/* Price & Offer Display */}
+            <div className="bg-gradient-to-br from-slate-900 via-[#0a1124] to-[#040814] text-white p-6 rounded-2xl border border-blue-500/30 shadow-lg shrink-0 w-full lg:w-auto text-center lg:text-right space-y-2">
+              <div className="flex items-center justify-center lg:justify-end gap-2.5">
+                {product.originalPriceBDT && product.originalPriceBDT > product.priceBDT && (
+                  <span className="text-sm font-bold text-gray-400 line-through font-mono">
+                    ৳{product.originalPriceBDT}
+                  </span>
+                )}
+                <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-extrabold text-[11px] border border-emerald-500/30">
+                  OFFER PRICE
                 </span>
-                {product.hasUpdate && (
-                  <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-bold text-xs border border-amber-200">
-                    Update v{product.latestVersion}
-                  </span>
-                )}
-                {product.isInstalled && (
-                  <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 font-bold text-xs border border-emerald-100">
-                    ✓ Installed
-                  </span>
-                )}
               </div>
-              <p className="text-xs text-gray-500 font-medium">
-                {product.category} • Ghostae Creative Suite
+
+              <div className="text-3xl sm:text-4xl font-black text-white font-mono tracking-tight text-gradient">
+                {product.isFree ? 'FREE' : `৳${product.priceBDT} BDT`}
+              </div>
+
+              <p className="text-[11px] text-blue-200/80 font-medium">
+                One-Time Payment • Lifetime Updates
               </p>
             </div>
-          </div>
 
-          <div className="text-left sm:text-right shrink-0">
-            <div className="text-2xl font-black text-gray-900 font-mono">
-              {product.isFree ? 'Free' : `${product.priceBDT} BDT`}
-            </div>
-            <div className="text-[11px] text-gray-400 font-medium">Lifetime License</div>
           </div>
         </div>
 
-        {/* Animated Installation Banner */}
+        {/* Animated Installation Progress Banner (when active) */}
         {isInstalling && (
           <div className="bg-gradient-to-r from-blue-900/90 via-[#0d162b] to-slate-900 p-6 rounded-3xl border border-blue-500/30 shadow-lg text-white space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="flex items-center justify-between gap-4">
@@ -215,7 +385,7 @@ export const ProductDetailView: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
-                    <span>Installing {product.name} to Adobe</span>
+                    <span>Installing {product.name} to Adobe CEP</span>
                     <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
                       {progress}%
                     </span>
@@ -236,194 +406,316 @@ export const ProductDetailView: React.FC = () => {
           </div>
         )}
 
-        {/* Main Content Grid: Description/Release Notes (Left 65%) + Clean Specs (Right 35%) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Left Column: Description & Release Notes */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="bg-white p-6 sm:p-7 rounded-3xl border border-gray-200/80 shadow-2xs space-y-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                Overview
-              </h3>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                {product.description || `${product.name} official extension for Adobe After Effects and Premiere Pro.`}
+        {/* =========================================================
+            2. "আপনি যা যা পাবেন" (WHAT YOU GET / SHOWCASE SECTION)
+        ========================================================= */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#0d7eff]"></span>
+                <span className="text-xs font-bold uppercase tracking-wider text-[#0d7eff]">
+                  Feature Showcase
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
+                আপনি যা যা পাবেন (What You Get)
+              </h2>
+            </div>
+
+            <button
+              onClick={() => setIsShowcaseModalOpen(true)}
+              className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-[#0d7eff] hover:text-[#026be5] font-bold text-xs rounded-xl border border-blue-200/80 transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
+            >
+              <span>সব দেখুন (View All)</span>
+              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* 3 Metric Highlight Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div className="bg-gradient-to-br from-blue-900 via-slate-900 to-[#0b1426] p-6 rounded-3xl border border-blue-500/30 text-white shadow-sm space-y-2 group hover:border-blue-400/50 transition">
+              <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-lg border border-blue-500/30">
+                ⚡
+              </div>
+              <div className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">
+                {showcaseData.presets_count}
+              </div>
+              <div className="font-extrabold text-sm text-blue-200">
+                Premium Animations (Presets)
+              </div>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                কাইনেটিক, বাউন্স, গ্লিচ ও মিনিমাল টেক্সট অ্যানিমেশন ইঞ্জিন।
               </p>
             </div>
 
-            {product.changelog && (
-              <div className="bg-white p-6 sm:p-7 rounded-3xl border border-gray-200/80 shadow-2xs space-y-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                  Release Notes (v{product.latestVersion || product.version})
-                </h3>
-                <div className="text-xs text-gray-600 whitespace-pre-line leading-relaxed font-mono bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                  {product.changelog}
-                </div>
+            <div className="bg-gradient-to-br from-purple-900 via-slate-900 to-[#120e24] p-6 rounded-3xl border border-purple-500/30 text-white shadow-sm space-y-2 group hover:border-purple-400/50 transition">
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-lg border border-purple-500/30">
+                🎨
               </div>
-            )}
-          </div>
-
-          {/* Right Column: Clean Specs (No hardcoded demo info) */}
-          <div className="lg:col-span-5">
-            <div className="bg-white p-6 sm:p-7 rounded-3xl border border-gray-200/80 shadow-2xs space-y-4">
-              <h4 className="font-bold text-gray-900 text-sm tracking-tight flex items-center gap-2">
-                <svg className="w-4 h-4 text-[#0d7eff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                <span>Compatibility & Information</span>
-              </h4>
-
-              <div className="divide-y divide-gray-100 text-xs">
-                <div className="py-2.5 flex items-center justify-between">
-                  <span className="text-gray-500 font-medium">Category</span>
-                  <span className="font-bold text-gray-900">{product.category}</span>
-                </div>
-                <div className="py-2.5 flex items-center justify-between">
-                  <span className="text-gray-500 font-medium">Adobe Compatibility</span>
-                  <span className="font-bold text-[#0d7eff]">2023 → 2026+ (Latest)</span>
-                </div>
-                <div className="py-2.5 flex items-center justify-between">
-                  <span className="text-gray-500 font-medium">Platform</span>
-                  <span className="font-bold text-gray-900">Windows 10/11 & macOS</span>
-                </div>
-                <div className="py-2.5 flex items-center justify-between">
-                  <span className="text-gray-500 font-medium">License Type</span>
-                  <span className="font-bold text-emerald-600">Lifetime Workstation License</span>
-                </div>
+              <div className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">
+                {showcaseData.templates_count}
               </div>
+              <div className="font-extrabold text-sm text-purple-200">
+                Stylish Animations (Templates)
+              </div>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                সোশ্যাল মিডিয়া লোয়ার থার্ড, মোশন টাইটেল ও সাবটাইটেল টেমপ্লেট।
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-amber-900 via-slate-900 to-[#1c1408] p-6 rounded-3xl border border-amber-500/30 text-white shadow-sm space-y-2 group hover:border-amber-400/50 transition">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg border border-amber-500/30">
+                ✨
+              </div>
+              <div className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">
+                {showcaseData.emojis_count}
+              </div>
+              <div className="font-extrabold text-sm text-amber-200">
+                Premium 3D Emojis
+              </div>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                হাই-কোয়ালিটি ৩ডি অ্যানিমেটেড ইমোজি ও রিঅ্যাকশন কালেকশন।
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Microsoft Store Style Screenshots Section (3 Large per row with click to zoom) */}
-        {screenshots.length > 0 && (
-          <section className="bg-white p-6 sm:p-7 rounded-3xl border border-gray-200/80 shadow-2xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                  Product Screenshots & Interface
-                </h3>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-50 text-[#0d7eff] font-bold">
-                  {screenshots.length} Images
-                </span>
-              </div>
-              <span className="text-xs text-gray-400">Click any image to zoom</span>
-            </div>
-
-            {/* 3 Columns Grid of Large Screenshots */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-1">
-              {screenshots.map((shot, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => setLightboxImageIdx(idx)}
-                  className="group relative aspect-[16/10] rounded-2xl overflow-hidden bg-slate-900 border border-gray-200 cursor-zoom-in shadow-2xs hover:shadow-xl transition-all duration-300 hover:border-[#0d7eff]/60 hover:-translate-y-1"
-                >
-                  <img
-                    src={shot.url}
-                    alt={shot.title || `Screenshot ${idx + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  
-                  {/* Subtle Hover Overlay with Zoom Icon */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-4 text-white">
-                    <div className="self-end p-2 rounded-xl bg-white/20 backdrop-blur-md">
-                      <svg className="w-4 h-4 fill-white" viewBox="0 0 24 24">
-                        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                      </svg>
-                    </div>
-                    <span className="text-xs font-bold truncate drop-shadow-md">{shot.title || `Screenshot ${idx + 1}`}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Video Tutorials Section (Only rendered if cloud provides valid real tutorials) */}
-        {tutorials.length > 0 && (
-          <section className="bg-white p-6 sm:p-7 rounded-3xl border border-gray-200/80 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              </div>
-              <h3 className="font-extrabold text-gray-900 text-sm tracking-tight">
-                Tutorials & Video Guides
-              </h3>
-            </div>
-            <span className="text-xs text-gray-400 font-medium">
-              {tutorials.length} Video Guides
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-1">
-            {tutorials.map((tut, idx) => (
+          {/* 2-Row x 3-Column Preview Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {sampleShowcaseCards.map((card) => (
               <div
-                key={tut.id || idx}
-                onClick={() => handleOpenTutorial(tut)}
-                className="rounded-2xl overflow-hidden bg-white border border-gray-200 hover:border-[#0d7eff]/50 transition-all shadow-2xs hover:shadow-xl cursor-pointer group flex flex-col justify-between hover:-translate-y-1"
+                key={card.id}
+                onClick={() => setIsShowcaseModalOpen(true)}
+                className={`relative overflow-hidden bg-gradient-to-br ${card.gradient} p-6 rounded-3xl border border-white/10 hover:border-blue-400/50 transition-all duration-300 shadow-md group cursor-pointer hover:-translate-y-1`}
               >
-                {/* 16:9 YouTube Standard Aspect Ratio Video Frame */}
-                <div className="relative aspect-video w-full bg-slate-900 overflow-hidden flex items-center justify-center">
-                  {tut.thumbnail ? (
-                    <img 
-                      src={tut.thumbnail} 
-                      alt={tut.title} 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-80 group-hover:opacity-95" 
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
-                    />
-                  ) : null}
-
-                  {/* YouTube Play Icon Button */}
-                  <div className="absolute w-12 h-12 rounded-full bg-red-600/90 group-hover:bg-red-600 text-white flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110 drop-shadow-md">
-                    <svg className="w-5 h-5 fill-white ml-0.5" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
-
-                  {/* Duration Badge */}
-                  <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded bg-black/80 text-white font-mono text-[10px] font-bold">
-                    {tut.duration || 'Video Guide'}
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-2xl">{card.icon}</span>
+                  <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-white/10 font-bold ${card.accentColor} border border-white/10`}>
+                    {card.tag}
                   </span>
                 </div>
 
-                {/* Content */}
-                <div className="p-4 space-y-2 flex-1 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-mono text-blue-600 font-bold uppercase tracking-wider block mb-1">
-                      Lesson 0{idx + 1}
-                    </span>
-                    <h4 className="font-bold text-xs text-gray-900 group-hover:text-[#0d7eff] transition-colors leading-snug line-clamp-2">
-                      {tut.title}
-                    </h4>
-                  </div>
+                <h3 className="text-base font-extrabold text-white group-hover:text-blue-300 transition-colors mb-2">
+                  {card.title}
+                </h3>
 
-                  <div className="flex items-center gap-1 text-xs font-bold text-[#0d7eff] pt-2 border-t border-gray-100">
-                    <span>Watch Tutorial</span>
-                    <svg className="w-3.5 h-3.5 fill-current transition-transform group-hover:translate-x-1" viewBox="0 0 24 24">
-                      <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-                    </svg>
-                  </div>
+                <p className="text-xs text-gray-300/90 leading-relaxed mb-4">
+                  {card.desc}
+                </p>
+
+                <div className="flex items-center justify-between pt-3 border-t border-white/10 text-[11px] font-bold text-blue-400 group-hover:text-white transition-colors">
+                  <span>লাইভ প্রিভিউ দেখুন</span>
+                  <svg className="w-3.5 h-3.5 fill-current transition-transform group-hover:translate-x-1" viewBox="0 0 24 24">
+                    <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                  </svg>
                 </div>
               </div>
             ))}
           </div>
         </section>
-        )}
+
+        {/* =========================================================
+            3. SEGMENTED SCREENSHOTS GALLERY (AE vs PREMIERE PRO)
+        ========================================================= */}
+        <section className="bg-white p-7 sm:p-9 rounded-3xl border border-gray-200/90 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                Official Interface Gallery
+              </h3>
+              <h2 className="text-xl font-black text-gray-900 tracking-tight">
+                প্যানেল ইন্টারফেস ও ওয়ার্কফ্লো স্ক্রিনশট
+              </h2>
+            </div>
+
+            {/* Host Switcher Segmented Control */}
+            <div className="inline-flex p-1 rounded-2xl bg-gray-100 border border-gray-200 shrink-0">
+              <button
+                onClick={() => setActiveHostTab('ae')}
+                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                  activeHostTab === 'ae'
+                    ? 'bg-white text-gray-900 shadow-sm border border-gray-200/80'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
+                <span>After Effects ({aeScreenshots.length})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveHostTab('pr')}
+                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                  activeHostTab === 'pr'
+                    ? 'bg-white text-gray-900 shadow-sm border border-gray-200/80'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                <span>Premiere Pro ({prScreenshots.length})</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Gallery Responsive Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 pt-2">
+            {currentGallery.map((shot, idx) => (
+              <div
+                key={idx}
+                onClick={() => setLightboxImageIdx(idx)}
+                className="group relative aspect-[16/10] rounded-2xl overflow-hidden bg-slate-950 border border-gray-200 cursor-zoom-in shadow-2xs hover:shadow-xl transition-all duration-300 hover:border-[#0d7eff]/60 hover:-translate-y-1"
+              >
+                <img
+                  src={shot.url}
+                  alt={shot.title || `Screenshot ${idx + 1}`}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.opacity = '0.5';
+                  }}
+                />
+                
+                {/* Subtle Hover Overlay */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-4 text-white">
+                  <div className="self-end p-2 rounded-xl bg-white/20 backdrop-blur-md">
+                    <svg className="w-4 h-4 fill-white" viewBox="0 0 24 24">
+                      <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                  </div>
+                  <span className="text-xs font-bold truncate drop-shadow-md">
+                    {shot.title || `Preview ${idx + 1}`}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* =========================================================
+            4. PRICING & GUARANTEE SECTION
+        ========================================================= */}
+        <section className="bg-gradient-to-br from-[#0c1322] via-[#0f1b36] to-[#080d1a] p-8 sm:p-10 rounded-3xl border border-blue-500/30 text-white shadow-xl space-y-6">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+            <div className="space-y-3 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-xs border border-emerald-500/30">
+                <span>🛡️ ১ দিনের ১০০% রিফান্ড গ্যারান্টি (24h Money-Back Guarantee)</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                লাইফটাইম অ্যাক্সেস ও আনলিমিটেড ক্রিয়েটিভ প্রোডাকশন
+              </h2>
+              <p className="text-sm text-gray-300 max-w-2xl leading-relaxed">
+                কোনো মাসিক সাবস্ক্রিপশন ফি নেই। একবার লাইসেন্স অ্যাক্টিভেট করলেই আজীবন সমস্ত ভবিষ্যৎ অ্যানিমেশন আপডেট বিনামূল্যে এই ডেস্কটপ অ্যাপ থেকেই ১-ক্লিকে ইনস্টল করতে পারবেন।
+              </p>
+            </div>
+
+            <div className="shrink-0 flex flex-col items-center lg:items-end gap-3">
+              <div className="text-center lg:text-right">
+                <div className="text-3xl sm:text-4xl font-black font-mono text-white">
+                  {product.isFree ? 'FREE' : `৳${product.priceBDT} BDT`}
+                </div>
+                <div className="text-xs text-emerald-400 font-bold mt-0.5">
+                  ✓ Lifetime Workstation License
+                </div>
+              </div>
+
+              {!product.isOwned && !product.isFree && (
+                <button
+                  onClick={() => openCheckout(product)}
+                  className="px-8 py-3 bg-[#0d7eff] hover:bg-[#026be5] text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-500/30 transition active:scale-95 cursor-pointer flex items-center gap-2"
+                >
+                  <span>BUY NOW (অর্ডার করুন)</span>
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================
+            5. সাধারণ প্রশ্নাবলী (FAQ ACCORDION)
+        ========================================================= */}
+        <section className="bg-white p-7 sm:p-9 rounded-3xl border border-gray-200/90 shadow-sm space-y-6">
+          <div className="space-y-1">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
+              Frequently Asked Questions
+            </h3>
+            <h2 className="text-xl font-black text-gray-900 tracking-tight">
+              সাধারণ প্রশ্নাবলী (FAQ)
+            </h2>
+          </div>
+
+          <div className="divide-y divide-gray-100">
+            {faqs.map((faq, idx) => {
+              const isOpen = openFaqIdx === idx;
+              return (
+                <div key={idx} className="py-4">
+                  <button
+                    onClick={() => setOpenFaqIdx(isOpen ? null : idx)}
+                    className="w-full flex items-center justify-between text-left gap-4 font-extrabold text-sm text-gray-900 hover:text-[#0d7eff] transition-colors cursor-pointer"
+                  >
+                    <span>{faq.q}</span>
+                    <span className={`w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 bg-blue-50 text-[#0d7eff]' : ''}`}>
+                      <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                        <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                      </svg>
+                    </span>
+                  </button>
+
+                  {isOpen && (
+                    <div className="mt-3 text-xs sm:text-sm text-gray-600 leading-relaxed pl-1 animate-in fade-in duration-200">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* =========================================================
+            6. WHATSAPP VIP COMMUNITY BANNER
+        ========================================================= */}
+        <section className="bg-gradient-to-r from-emerald-950 via-[#072418] to-slate-900 p-7 sm:p-9 rounded-3xl border border-emerald-500/30 text-white shadow-md">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-5 text-center sm:text-left">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center font-bold text-3xl shadow-lg shrink-0">
+                💬
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg sm:text-xl font-black text-white">
+                  Join Ghostae VIP Editor Community on WhatsApp
+                </h3>
+                <p className="text-xs sm:text-sm text-emerald-200/90 leading-relaxed max-w-xl">
+                  নতুন অ্যানিমেশন আপডেট, টিউটোরিয়াল এবং তাৎক্ষণিক টেকনিক্যাল সাপোর্টের জন্য আমাদের অফিশিয়াল VIP কমিউনিটিতে যুক্ত হোন।
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => handleOpenExternal(whatsappUrl, "Ghostae VIP WhatsApp Group")}
+              className="px-7 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-500/30 transition active:scale-95 cursor-pointer flex items-center gap-2 shrink-0"
+            >
+              <span>Join WhatsApp VIP Group</span>
+              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+              </svg>
+            </button>
+          </div>
+        </section>
 
       </div>
 
-      {/* Fullscreen Microsoft Store Style Lightbox Zoom Modal */}
-      {lightboxImageIdx !== null && screenshots[lightboxImageIdx] && (
+      {/* =========================================================
+          FULLSCREEN LIGHTBOX MODAL
+      ========================================================= */}
+      {lightboxImageIdx !== null && currentGallery[lightboxImageIdx] && (
         <div 
           onClick={() => setLightboxImageIdx(null)}
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-200"
         >
-          {/* Previous Arrow */}
-          {screenshots.length > 1 && (
+          {currentGallery.length > 1 && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -438,22 +730,20 @@ export const ProductDetailView: React.FC = () => {
             </button>
           )}
 
-          {/* Image Container */}
           <div 
             onClick={(e) => e.stopPropagation()}
             className="relative max-w-5xl w-full max-h-[85vh] flex flex-col items-center justify-center"
           >
             <img 
-              src={screenshots[lightboxImageIdx].url} 
-              alt={screenshots[lightboxImageIdx].title || 'Screenshot'} 
+              src={currentGallery[lightboxImageIdx].url} 
+              alt={currentGallery[lightboxImageIdx].title || 'Screenshot'} 
               className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-white/20"
             />
             <div className="mt-3 flex items-center justify-between w-full px-2 text-white/90 text-xs">
-              <span className="font-bold">{screenshots[lightboxImageIdx].title || `Screenshot ${lightboxImageIdx + 1}`}</span>
-              <span className="font-mono text-white/60">{lightboxImageIdx + 1} / {screenshots.length}</span>
+              <span className="font-bold">{currentGallery[lightboxImageIdx].title || `Screenshot ${lightboxImageIdx + 1}`}</span>
+              <span className="font-mono text-white/60">{lightboxImageIdx + 1} / {currentGallery.length}</span>
             </div>
 
-            {/* Close Button */}
             <button
               onClick={() => setLightboxImageIdx(null)}
               className="absolute -top-4 -right-4 w-9 h-9 rounded-full bg-white text-gray-900 flex items-center justify-center font-bold text-sm shadow-xl hover:bg-gray-100 cursor-pointer"
@@ -462,8 +752,7 @@ export const ProductDetailView: React.FC = () => {
             </button>
           </div>
 
-          {/* Next Arrow */}
-          {screenshots.length > 1 && (
+          {currentGallery.length > 1 && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -477,6 +766,115 @@ export const ProductDetailView: React.FC = () => {
               </svg>
             </button>
           )}
+        </div>
+      )}
+
+      {/* =========================================================
+          "সব দেখুন" (VIEW ALL SHOWCASE MODAL)
+      ========================================================= */}
+      {isShowcaseModalOpen && (
+        <div 
+          onClick={() => setIsShowcaseModalOpen(false)}
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-4xl w-full max-h-[90vh] bg-slate-900 border border-white/20 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-white"
+          >
+            {/* Modal Header */}
+            <div className="p-6 border-b border-white/10 flex items-center justify-between bg-slate-950/60">
+              <div>
+                <h3 className="text-lg font-black text-white">
+                  সম্পূর্ণ অ্যানিমেশন ও টেমপ্লেট লাইব্রেরি
+                </h3>
+                <p className="text-xs text-gray-400">
+                  {showcaseData.presets_count} Presets • {showcaseData.templates_count} Templates • {showcaseData.emojis_count} 3D Emojis
+                </p>
+              </div>
+
+              <button
+                onClick={() => setIsShowcaseModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold text-xs transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Filter Tabs & Search Bar */}
+            <div className="p-6 border-b border-white/10 bg-slate-950/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2 p-1 rounded-xl bg-white/5 border border-white/10 w-full sm:w-auto">
+                <button
+                  onClick={() => setShowcaseCategory('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${showcaseCategory === 'all' ? 'bg-[#0d7eff] text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                  সব ({fullShowcaseLibrary.length})
+                </button>
+                <button
+                  onClick={() => setShowcaseCategory('presets')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${showcaseCategory === 'presets' ? 'bg-[#0d7eff] text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                  প্রিসেটস
+                </button>
+                <button
+                  onClick={() => setShowcaseCategory('templates')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${showcaseCategory === 'templates' ? 'bg-[#0d7eff] text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                  টেমপ্লেটস
+                </button>
+                <button
+                  onClick={() => setShowcaseCategory('emojis')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${showcaseCategory === 'emojis' ? 'bg-[#0d7eff] text-white' : 'text-gray-400 hover:text-white'}`}
+                >
+                  ৩ডি ইমোজি
+                </button>
+              </div>
+
+              <input
+                type="text"
+                value={showcaseSearch}
+                onChange={(e) => setShowcaseSearch(e.target.value)}
+                placeholder="অ্যানিমেশন খুঁজুন..."
+                className="w-full sm:w-64 px-4 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs text-white placeholder:text-gray-500 focus:outline-hidden focus:border-blue-400"
+              />
+            </div>
+
+            {/* Modal Cards Grid */}
+            <div className="p-6 overflow-y-auto max-h-[60vh] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {filteredShowcaseItems.map((item) => (
+                <div
+                  key={item.id}
+                  className={`p-5 rounded-2xl bg-gradient-to-br ${item.gradient} border border-white/10 flex flex-col justify-between space-y-3`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">{item.icon}</span>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 font-bold ${item.accentColor}`}>
+                      {item.tag}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h4 className="font-extrabold text-xs text-white">
+                      {item.title}
+                    </h4>
+                    <p className="text-[11px] text-gray-300 leading-snug mt-1">
+                      {item.desc}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-white/10 bg-slate-950/60 flex items-center justify-between text-xs text-gray-400">
+              <span>Ghostae Creative Suite Text Engine V2</span>
+              <button
+                onClick={() => setIsShowcaseModalOpen(false)}
+                className="px-4 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg font-bold transition cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

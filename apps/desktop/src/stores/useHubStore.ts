@@ -15,12 +15,36 @@ export interface ScreenshotItem {
   title?: string;
 }
 
+export interface ShowcaseData {
+  presets_count: string;
+  templates_count: string;
+  emojis_count: string;
+  items?: Array<{
+    id: string;
+    title: string;
+    category: 'presets' | 'templates' | 'emojis';
+    previewUrl?: string;
+    tag?: string;
+  }>;
+}
+
+export interface HostScreenshots {
+  ae: ScreenshotItem[];
+  pr: ScreenshotItem[];
+}
+
+export interface FaqItem {
+  q: string;
+  a: string;
+}
+
 export interface ProductItem {
   id: string;
   slug: string;
   name: string;
   type: 'official' | 'free_resource';
   priceBDT: number;
+  originalPriceBDT?: number;
   isFree: boolean;
   image: string;
   version: string;
@@ -28,6 +52,7 @@ export interface ProductItem {
   category: string;
   tagline: string;
   description: string;
+  shortDesc?: string;
   changelog?: string;
   isOwned: boolean;
   isInstalled: boolean;
@@ -36,8 +61,13 @@ export interface ProductItem {
   installStatusText?: string;
   isInstalling?: boolean;
   targetHost: 'AE' | 'PPRO' | 'BOTH';
+  targetApp?: 'dual' | 'ae' | 'pr';
   features: { title: string; desc: string }[];
   screenshots: ScreenshotItem[];
+  hostScreenshots?: HostScreenshots;
+  showcase?: ShowcaseData;
+  faq?: FaqItem[];
+  whatsappUrl?: string;
   tutorials?: TutorialItem[];
   downloadUrl?: string;
   cepFolderName?: string;
@@ -285,22 +315,29 @@ export const useHubStore = create<HubStoreState>()(
                 name: cp.name,
                 type: 'official',
                 priceBDT: cp.price_bdt,
+                originalPriceBDT: cp.original_price_bdt || 499,
                 isFree: cp.is_free,
                 image: cp.thumbnail_url || '',
                 version: isInstalled ? installedVersion : latestVersion,
                 latestVersion: latestVersion,
                 category: cp.category || 'Creative Extension',
                 tagline: existing?.tagline || `${cp.name} for Adobe 2023+`,
-                description: existing?.description || `${cp.name} - official Ghostae extension for After Effects and Premiere Pro CC 2023 to latest.`,
+                description: cp.description || existing?.description || `${cp.name} - official Ghostae extension for After Effects and Premiere Pro CC 2023 to latest.`,
+                shortDesc: cp.short_desc || 'After Effects ও Premiere Pro-এর জন্য আল্টিমেট টেক্সট ও ক্যাপশন ইঞ্জিন',
                 changelog: cp.changelog || '',
                 isOwned: isOwned,
                 isInstalled,
                 hasUpdate,
                 targetHost: cp.target_host || 'AE',
+                targetApp: cp.target_app || (cp.target_host === 'BOTH' ? 'dual' : cp.target_host === 'PPRO' ? 'pr' : 'ae'),
                 downloadUrl: cp.download_url,
                 cepFolderName: cp.cep_folder_name || (cp.slug.startsWith('com.') ? cp.slug : `com.ghostae.${cp.slug}`),
-                features: existing?.features && existing.features.length > 0 ? existing.features : (cp.features || []),
+                features: cp.features && cp.features.length > 0 ? cp.features : (existing?.features || []),
                 screenshots: cp.screenshots && cp.screenshots.length > 0 ? cp.screenshots : (existing?.screenshots || []),
+                hostScreenshots: cp.host_screenshots,
+                showcase: cp.showcase,
+                faq: cp.faq,
+                whatsappUrl: cp.whatsapp_url || 'https://chat.whatsapp.com/GhostaeVIP',
                 tutorials: cp.tutorials && cp.tutorials.length > 0 ? cp.tutorials : (existing?.tutorials || [])
               };
             });
