@@ -401,7 +401,17 @@ app.whenReady().then(async () => {
         downloadUrl,
         expectedChecksum,
         cepFolderName: cepFolderName || `com.ghostae.${slug}`,
-        authToken: typeof authToken === 'string' ? authToken : undefined
+        authToken: typeof authToken === 'string' ? authToken : undefined,
+        onProgress: (progressInfo) => {
+          try {
+            if (event.sender && !event.sender.isDestroyed()) {
+              event.sender.send('cep-install-progress', {
+                slug,
+                ...progressInfo
+              });
+            }
+          } catch (e) {}
+        }
       });
       return { success: true, result };
     } catch (err) {

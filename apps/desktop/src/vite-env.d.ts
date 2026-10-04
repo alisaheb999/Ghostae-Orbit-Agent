@@ -10,7 +10,7 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-interface LocalInstalledExtension {
+export interface LocalInstalledExtension {
   id: string;
   folderName: string;
   displayName: string;
@@ -22,18 +22,36 @@ interface LocalInstalledExtension {
   modifiedAt: number;
 }
 
-interface Window {
-  ghostaeDesktop?: {
-    getHardwareId: () => Promise<string>;
-    checkAdobeRunning: () => Promise<{ isRunning: boolean; runningApps: string[] }>;
-    saveHubSession: (sessionData: any) => Promise<{ success: boolean; path?: string; offline_until?: string; error?: string }>;
-    clearHubSession: () => Promise<{ success: boolean; error?: string }>;
-    getHubSession: () => Promise<{ success: boolean; session?: any; error?: string }>;
-    installCEPExtension: (params: { slug: string; downloadUrl: string; cepFolderName?: string; expectedChecksum?: string; authToken?: string }) => Promise<{ success: boolean; result?: any; error?: string }>;
-    openExternal: (url: string) => Promise<{ success: boolean; error?: string }>;
-    scanInstalledCEPExtensions: () => Promise<{ success: boolean; extensions: LocalInstalledExtension[]; error?: string }>;
-    uninstallCEPExtension: (folderName: string) => Promise<{ success: boolean; result?: any; error?: string }>;
-    openExtensionFolder: (targetPath?: string) => Promise<{ success: boolean; error?: string }>;
-    isDesktop?: boolean;
-  };
+export interface InstallProgressPayload {
+  slug: string;
+  progress: number;
+  downloadedBytes?: number;
+  totalBytes?: number;
+  downloadedMB?: string;
+  totalMB?: string;
+  speed?: string;
+  eta?: string;
+  status?: string;
+  isExtracting?: boolean;
+  isDone?: boolean;
+  error?: string;
+}
+
+declare global {
+  interface Window {
+    ghostaeDesktop?: {
+      getHardwareId: () => Promise<string>;
+      checkAdobeRunning: () => Promise<{ isRunning: boolean; runningApps: string[] }>;
+      saveHubSession: (sessionData: any) => Promise<{ success: boolean; path?: string; offline_until?: string; error?: string }>;
+      clearHubSession: () => Promise<{ success: boolean; error?: string }>;
+      getHubSession: () => Promise<{ success: boolean; session?: any; error?: string }>;
+      installCEPExtension: (params: { slug: string; downloadUrl: string; cepFolderName?: string; expectedChecksum?: string; authToken?: string }) => Promise<{ success: boolean; result?: any; error?: string }>;
+      onInstallProgress?: (callback: (data: InstallProgressPayload) => void) => () => void;
+      openExternal: (url: string) => Promise<{ success: boolean; error?: string }>;
+      scanInstalledCEPExtensions: () => Promise<{ success: boolean; extensions: LocalInstalledExtension[]; error?: string }>;
+      uninstallCEPExtension: (folderName: string) => Promise<{ success: boolean; result?: any; error?: string }>;
+      openExtensionFolder: (targetPath?: string) => Promise<{ success: boolean; error?: string }>;
+      isDesktop?: boolean;
+    };
+  }
 }

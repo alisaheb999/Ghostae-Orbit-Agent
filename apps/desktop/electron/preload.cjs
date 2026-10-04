@@ -7,6 +7,15 @@ const ghostaeDesktopApi = {
   clearHubSession: () => ipcRenderer.invoke('clear-hub-session'),
   getHubSession: () => ipcRenderer.invoke('get-hub-session'),
   installCEPExtension: (params) => ipcRenderer.invoke('install-cep-extension', params),
+  onInstallProgress: (callback) => {
+    const handler = (_event, data) => {
+      if (typeof callback === 'function') {
+        callback(data);
+      }
+    };
+    ipcRenderer.on('cep-install-progress', handler);
+    return () => ipcRenderer.removeListener('cep-install-progress', handler);
+  },
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
   scanInstalledCEPExtensions: () => ipcRenderer.invoke('scan-installed-cep-extensions'),
   uninstallCEPExtension: (folderName) => ipcRenderer.invoke('uninstall-cep-extension', folderName),

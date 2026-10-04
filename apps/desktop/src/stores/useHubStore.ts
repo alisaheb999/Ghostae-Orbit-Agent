@@ -59,6 +59,10 @@ export interface ProductItem {
   hasUpdate: boolean;
   installProgress?: number; // 0 - 100
   installStatusText?: string;
+  downloadSpeed?: string;
+  downloadEta?: string;
+  downloadedMB?: string;
+  totalMB?: string;
   isInstalling?: boolean;
   targetHost: 'AE' | 'PPRO' | 'BOTH';
   targetApp?: 'dual' | 'ae' | 'pr';
@@ -599,18 +603,27 @@ export const useHubStore = create<HubStoreState>()(
           }
         }
 
+        const initialUpdatedProducts = get().products.map(p =>
+          p.id === productId ? { 
+            ...p, 
+            isInstalling: true, 
+            installProgress: 1,
+            downloadSpeed: 'Connecting...',
+            downloadEta: 'Starting...',
+            downloadedMB: '0.00 MB',
+            totalMB: '--',
+            installStatusText: 'Connecting to Ghostae Cloud & verifying stream...' 
+          } : p
+        );
+
         set({
-          products: products.map(p =>
-            p.id === productId ? { 
-              ...p, 
-              isInstalling: true, 
-              installProgress: 15,
-              installStatusText: 'Connecting to Ghostae Cloud & verifying entitlements...' 
-            } : p
-          )
+          products: initialUpdatedProducts,
+          selectedProductDetail: get().selectedProductDetail?.id === productId 
+            ? initialUpdatedProducts.find(p => p.id === productId) || null 
+            : get().selectedProductDetail
         });
 
-        showToast(`${product.name} ডাউনলোড ও যাচাইকরণ শুরু হচ্ছে...`);
+        showToast(`${product.name} ডাউনলোড শুরু হচ্ছে...`);
 
         // Check if running in Electron environment for real filesystem write
         if (typeof window !== 'undefined' && window.ghostaeDesktop?.installCEPExtension) {
@@ -619,55 +632,12 @@ export const useHubStore = create<HubStoreState>()(
 
           const desktop = window.ghostaeDesktop;
           try {
-            set({
-              products: get().products.map(p =>
-                p.id === productId ? { 
-                  ...p, 
-                  installProgress: 40,
-                  installStatusText: 'Downloading extension bundle from CDN...' 
-                } : p
-              )
-            });
-
-            const timer1 = setTimeout(() => {
-              const currentProd = get().products.find(p => p.id === productId);
-              if (currentProd?.isInstalling) {
-                set({
-                  products: get().products.map(p =>
-                    p.id === productId ? { 
-                      ...p, 
-                      installProgress: 68,
-                      installStatusText: 'Verifying Adobe CSXS manifest & signature...' 
-                    } : p
-                  )
-                });
-              }
-            }, 800);
-
-            const timer2 = setTimeout(() => {
-              const currentProd = get().products.find(p => p.id === productId);
-              if (currentProd?.isInstalling) {
-                set({
-                  products: get().products.map(p =>
-                    p.id === productId ? { 
-                      ...p, 
-                      installProgress: 88,
-                      installStatusText: 'Configuring CEP registry & PlayerDebugMode...' 
-                    } : p
-                  )
-                });
-              }
-            }, 1800);
-
             const installRes = await desktop.installCEPExtension({
               slug: product.slug,
               downloadUrl,
               cepFolderName,
               authToken: authToken || undefined
             });
-
-            clearTimeout(timer1);
-            clearTimeout(timer2);
 
             if (!installRes || !installRes.success) {
               const errMsg = installRes?.error || 'Extension extraction or physical manifest verification failed.';
@@ -681,6 +651,10 @@ export const useHubStore = create<HubStoreState>()(
                 isInstalled: true, 
                 isInstalling: false, 
                 installProgress: 100, 
+                downloadSpeed: undefined,
+                downloadEta: undefined,
+                downloadedMB: undefined,
+                totalMB: undefined,
                 installStatusText: 'Installation complete!',
                 hasUpdate: false,
                 version: targetVersion
@@ -696,14 +670,27 @@ export const useHubStore = create<HubStoreState>()(
             // Rescan local CEP directory so Library view updates automatically
             await get().scanLocalCEPExtensions();
 
-            showToast(`${product.name} সফলভাবে ইনস্টল হয়েছে! এখন Adobe After Effects / Premiere Pro ওপেন করে Window > Extensions-এ ব্যবহার করুন।`);
+            showToast(`${product.name} সফলভাবে ইনস্টল হয়েছে! Adobe-এর Window > Extensions থেকে ব্যবহার করুন।`);
             return;
           } catch (ipcErr: any) {
             console.error('[CEP Install IPC error]', ipcErr);
+            const resetUpdated = get().products.map(p =>
+              p.id === productId ? { 
+                ...p, 
+                isInstalling: false, 
+                installProgress: 0, 
+                downloadSpeed: undefined,
+                downloadEta: undefined,
+                downloadedMB: undefined,
+                totalMB: undefined,
+                installStatusText: undefined 
+              } : p
+            );
             set({
-              products: get().products.map(p =>
-                p.id === productId ? { ...p, isInstalling: false, installProgress: 0, installStatusText: undefined } : p
-              )
+              products: resetUpdated,
+              selectedProductDetail: get().selectedProductDetail?.id === productId 
+                ? resetUpdated.find(p => p.id === productId) || null 
+                : get().selectedProductDetail
             });
             const errorDetail = ipcErr?.message || "এক্সটেনশন ইনস্টলেশন ব্যর্থ হয়েছে।";
             showToast(`ইনস্টলেশন এরর: ${errorDetail}`);
@@ -712,10 +699,14 @@ export const useHubStore = create<HubStoreState>()(
         }
 
         // Not running in Electron desktop environment: Never fake success!
+        const resetUpdated = get().products.map(p =>
+          p.id === productId ? { ...p, isInstalling: false, installProgress: 0, installStatusText: undefined } : p
+        );
         set({
-          products: get().products.map(p =>
-            p.id === productId ? { ...p, isInstalling: false, installProgress: 0, installStatusText: undefined } : p
-          )
+          products: resetUpdated,
+          selectedProductDetail: get().selectedProductDetail?.id === productId 
+            ? resetUpdated.find(p => p.id === productId) || null 
+            : get().selectedProductDetail
         });
         showToast("ইনস্টলেশন এরর: ব্রাউজারে লোকাল CEP ফোল্ডারে ইনস্টল সম্ভব নয়। Ghostae Desktop App চালু করুন।");
       },
@@ -915,3 +906,40 @@ export const useHubStore = create<HubStoreState>()(
     }
   )
 );
+
+// Global IPC progress listener for real IDM-style byte-streaming metrics
+if (typeof window !== 'undefined' && window.ghostaeDesktop?.onInstallProgress) {
+  window.ghostaeDesktop.onInstallProgress((progressData) => {
+    const { slug, progress, downloadedMB, totalMB, speed, eta, status, isDone, error } = progressData;
+    useHubStore.setState((state) => {
+      const updatedProducts = state.products.map(p => {
+        if (p.slug === slug || (p.cepFolderName && p.cepFolderName.includes(slug)) || p.id === slug) {
+          return {
+            ...p,
+            installProgress: progress,
+            downloadSpeed: speed,
+            downloadEta: eta,
+            downloadedMB: downloadedMB,
+            totalMB: totalMB,
+            installStatusText: status,
+            isInstalling: !isDone && !error,
+            isInstalled: isDone ? true : p.isInstalled
+          };
+        }
+        return p;
+      });
+
+      const updatedSelected = state.selectedProductDetail && (
+        state.selectedProductDetail.slug === slug || 
+        state.selectedProductDetail.id === slug ||
+        (state.selectedProductDetail.cepFolderName && state.selectedProductDetail.cepFolderName.includes(slug))
+      ) ? updatedProducts.find(p => p.id === state.selectedProductDetail?.id) || null : state.selectedProductDetail;
+
+      return {
+        products: updatedProducts,
+        selectedProductDetail: updatedSelected
+      };
+    });
+  });
+}
+

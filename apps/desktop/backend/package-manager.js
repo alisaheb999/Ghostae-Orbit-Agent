@@ -22,11 +22,85 @@ function copyDirRecursive(source, target) {
     }
 }
 
+async function downloadStreamWithProgress(url, headers = {}, onProgress = null) {
+    let response = await fetch(url, { headers });
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+    }
+
+    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+    const contentLengthHeader = response.headers.get('content-length');
+    let totalBytes = contentLengthHeader ? parseInt(contentLengthHeader, 10) : 0;
+
+    // Handle possible JSON wrapper (e.g. storage signed URL redirects)
+    if (contentType.includes('application/json') || (totalBytes > 0 && totalBytes < 20000)) {
+        const text = await response.text();
+        try {
+            const parsed = JSON.parse(text);
+            const resolvedUrl = parsed.url || parsed.download_url || parsed.signed_url || parsed.data?.url;
+            if (resolvedUrl && typeof resolvedUrl === 'string') {
+                return downloadStreamWithProgress(resolvedUrl, {}, onProgress);
+            }
+        } catch (e) {}
+        return Buffer.from(text);
+    }
+
+    const reader = response.body.getReader();
+    const chunks = [];
+    let receivedBytes = 0;
+    const startTime = Date.now();
+    let lastReportTime = 0;
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        chunks.push(Buffer.from(value));
+        receivedBytes += value.length;
+
+        const now = Date.now();
+        if (onProgress && (now - lastReportTime > 150 || (totalBytes > 0 && receivedBytes >= totalBytes))) {
+            lastReportTime = now;
+            const elapsedSec = Math.max(0.1, (now - startTime) / 1000);
+            const speedBytesPerSec = receivedBytes / elapsedSec;
+
+            let percent = totalBytes > 0 ? Math.min(98, Math.round((receivedBytes / totalBytes) * 100)) : Math.min(95, Math.round(receivedBytes / (1024 * 1024)));
+            let speedText = speedBytesPerSec > 1024 * 1024 
+                ? `${(speedBytesPerSec / (1024 * 1024)).toFixed(1)} MB/s`
+                : `${Math.round(speedBytesPerSec / 1024)} KB/s`;
+
+            let etaSec = (totalBytes > receivedBytes && speedBytesPerSec > 0)
+                ? Math.round((totalBytes - receivedBytes) / speedBytesPerSec)
+                : 0;
+            
+            let etaText = etaSec > 60
+                ? `~${Math.floor(etaSec / 60)}m ${etaSec % 60}s remaining`
+                : etaSec > 0 ? `~${etaSec}s remaining` : 'Calculating...';
+
+            let downloadedMB = (receivedBytes / (1024 * 1024)).toFixed(1);
+            let totalMB = totalBytes > 0 ? (totalBytes / (1024 * 1024)).toFixed(1) : downloadedMB;
+
+            onProgress({
+                percent,
+                downloadedBytes: receivedBytes,
+                totalBytes,
+                downloadedMB,
+                totalMB,
+                speedText,
+                etaText,
+                statusText: `Downloading: ${downloadedMB} MB / ${totalMB} MB (${percent}%) • ${speedText} • ${etaText}`
+            });
+        }
+    }
+
+    return Buffer.concat(chunks);
+}
+
 /**
  * Downloads, verifies, stages, validates and atomically installs a CEP extension package.
  * Automatically resolves JSON signed URLs, validates ZIP headers, and searches manifest recursively.
  */
-export async function installPackageFromUrl({ slug, downloadUrl, expectedChecksum, cepFolderName, cep_folder_name, authToken }) {
+export async function installPackageFromUrl({ slug, downloadUrl, expectedChecksum, cepFolderName, cep_folder_name, authToken, onProgress }) {
     // 0. Ensure PlayerDebugMode = 1 for CSXS 9 to 16
     enablePlayerDebugMode();
 
@@ -51,57 +125,18 @@ export async function installPackageFromUrl({ slug, downloadUrl, expectedChecksu
     let backupCreated = false;
 
     try {
-        // 1. Download file stream (handling JSON endpoints with signed storage URLs)
+        if (onProgress) {
+            onProgress({ percent: 2, statusText: 'Connecting to Ghostae Cloud CDN...', speedText: 'Connecting...', etaText: 'Starting...' });
+        }
+
+        // 1. Download file stream with real-time byte progress tracking
         const headers = {};
         if (authToken && typeof authToken === 'string') {
             headers['Authorization'] = `Bearer ${authToken.trim()}`;
         }
 
-        let targetUrl = downloadUrl;
-        console.log(`[CEP Installer] Requesting package from: ${targetUrl}`);
-        let response = await fetch(targetUrl, { headers });
-
-        if (!response.ok) {
-            let errorDetail = '';
-            try {
-                const errJson = await response.json();
-                errorDetail = errJson?.error?.message || errJson?.message || '';
-            } catch (e) {}
-            throw new Error(`Failed to download package: HTTP ${response.status}${errorDetail ? ' - ' + errorDetail : ' ' + response.statusText}`);
-        }
-
-        let arrayBuffer = await response.arrayBuffer();
-        let buffer = Buffer.from(arrayBuffer);
-
-        // Check if server returned a JSON response (containing a signed Supabase / Storage CDN URL)
-        const contentType = (response.headers.get('content-type') || '').toLowerCase();
-        const isJson = contentType.includes('application/json') || (buffer.length < 50000 && buffer.toString('utf8').trim().startsWith('{'));
-
-        if (isJson) {
-            try {
-                const parsed = JSON.parse(buffer.toString('utf8'));
-                if (parsed.success === false || parsed.ok === false || parsed.error) {
-                    const msg = parsed.error?.message || parsed.message || (typeof parsed.error === 'string' ? parsed.error : 'Server rejected download request');
-                    throw new Error(`Server download error: ${msg}`);
-                }
-
-                const resolvedUrl = parsed.url || parsed.download_url || parsed.signed_url || parsed.data?.url;
-                if (resolvedUrl && typeof resolvedUrl === 'string') {
-                    console.log(`[CEP Installer] Resolved storage CDN URL for ${slug}`);
-                    targetUrl = resolvedUrl;
-                    const storageRes = await fetch(targetUrl);
-                    if (!storageRes.ok) {
-                        throw new Error(`Failed to download binary from storage CDN: HTTP ${storageRes.status} ${storageRes.statusText}`);
-                    }
-                    arrayBuffer = await storageRes.arrayBuffer();
-                    buffer = Buffer.from(arrayBuffer);
-                }
-            } catch (jsonErr) {
-                if (jsonErr.message.startsWith('Server download error') || jsonErr.message.startsWith('Failed to download binary')) {
-                    throw jsonErr;
-                }
-            }
-        }
+        console.log(`[CEP Installer] Streaming package from: ${downloadUrl}`);
+        let buffer = await downloadStreamWithProgress(downloadUrl, headers, onProgress);
 
         // Validate ZIP magic header: standard ZIP file starts with 'PK' (0x50 0x4B 0x03 0x04)
         const isZipHeader = buffer.length >= 4 && buffer[0] === 0x50 && buffer[1] === 0x4B;
@@ -215,6 +250,15 @@ export async function installPackageFromUrl({ slug, downloadUrl, expectedChecksu
             backupCreated = true;
         }
 
+        if (onProgress) {
+            onProgress({
+                percent: 98,
+                statusText: 'Extracting and deploying files to Adobe CEP directory...',
+                speedText: 'Extracting...',
+                etaText: 'Finalizing...'
+            });
+        }
+
         // 6. Copy validated files from staging to target
         try {
             copyDirRecursive(extractionRoot, finalLiveTargetDir);
@@ -240,6 +284,15 @@ export async function installPackageFromUrl({ slug, downloadUrl, expectedChecksu
             try {
                 fs.rmSync(backupDir, { recursive: true, force: true });
             } catch (e) {}
+        }
+
+        if (onProgress) {
+            onProgress({
+                percent: 100,
+                statusText: 'Installation complete!',
+                speedText: 'Done',
+                etaText: 'Complete'
+            });
         }
 
         return {

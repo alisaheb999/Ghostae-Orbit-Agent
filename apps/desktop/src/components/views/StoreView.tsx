@@ -98,28 +98,41 @@ export const StoreView: React.FC = () => {
             </span>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!product.isInstalled) {
-                    installExtensionToCEP(product.id);
-                  } else {
-                    handleProductClick(product);
-                  }
-                }}
-                className={`px-4 py-1.5 text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer ${
-                  product.isInstalled
-                    ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
-                    : 'bg-[#0d7eff] hover:bg-[#026be5] text-white'
-                }`}
-              >
-                <span>{product.isInstalled ? 'Installed' : 'Install'}</span>
-                {!product.isInstalled && (
-                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+              {product.isInstalling ? (
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-1 rounded-xl">
+                  <svg className="w-3.5 h-3.5 text-[#0d7eff] animate-spin shrink-0" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                   </svg>
-                )}
-              </button>
+                  <span className="text-xs font-mono font-bold text-[#0d7eff]">{product.installProgress || 0}%</span>
+                  {product.downloadSpeed && (
+                    <span className="text-[10px] font-mono text-slate-500">({product.downloadSpeed})</span>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!product.isInstalled) {
+                      installExtensionToCEP(product.id);
+                    } else {
+                      handleProductClick(product);
+                    }
+                  }}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer ${
+                    product.isInstalled
+                      ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                      : 'bg-[#0d7eff] hover:bg-[#026be5] text-white'
+                  }`}
+                >
+                  <span>{product.isInstalled ? 'Installed' : 'Install'}</span>
+                  {!product.isInstalled && (
+                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                      <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+                    </svg>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
