@@ -182,54 +182,13 @@ const INITIAL_PRODUCTS: ProductItem[] = [];
 const INITIAL_LICENSES: LicenseItem[] = [];
 const INITIAL_UPDATES: UpdateItem[] = [];
 
-/**
- * Universal Multi-Layer Product Ownership Checker
- * Checks slug normalization, ID match, product name, all-suite license, and local session
- */
 export function checkIsProductOwned(
-  product: { id: string; slug: string; name?: string; isFree?: boolean },
-  licenses: Array<{ productId?: string; product_slug?: string; productName?: string; isEnabled?: boolean; status?: string; key?: string }>,
-  currentUser?: { isPro?: boolean } | null
+  _product?: any,
+  _licenses?: any,
+  _currentUser?: any
 ): boolean {
-  if (product.isFree) return true;
-  if (!licenses || !Array.isArray(licenses)) return false;
-
-  const normalize = (s?: string) => String(s || '').toLowerCase().replace(/^prod-/, '').replace(/^com\.ghostae\./, '').replace(/^ghostae-/, '').replace(/[^a-z0-9]/g, '');
-
-  const targetSlugNorm = normalize(product.slug);
-  const targetIdNorm = normalize(product.id);
-  const targetNameNorm = normalize(product.name);
-
-  return licenses.some(lic => {
-    if (lic.status === 'expired' || lic.status === 'suspended' || lic.isEnabled === false) {
-      return false;
-    }
-
-    const licSlugNorm = normalize(lic.productId || lic.product_slug);
-    const licNameNorm = normalize(lic.productName);
-
-    // 1. Exact or normalized slug/id match
-    if (licSlugNorm && (licSlugNorm === targetSlugNorm || licSlugNorm === targetIdNorm)) {
-      return true;
-    }
-
-    // 2. Full Suite / All-access license
-    if (licSlugNorm === 'all' || licSlugNorm === 'suite' || licSlugNorm === 'creativesuite' || licSlugNorm === 'full') {
-      return true;
-    }
-
-    // 3. Text Panel fuzzy match (e.g. "text", "ghosttext", "textanimation")
-    if (targetSlugNorm.includes('text') && (licSlugNorm.includes('text') || licNameNorm.includes('text'))) {
-      return true;
-    }
-
-    // 4. Name match
-    if (targetNameNorm && licNameNorm && (targetNameNorm === licNameNorm || licNameNorm.includes(targetNameNorm) || targetNameNorm.includes(licNameNorm))) {
-      return true;
-    }
-
-    return false;
-  });
+  // Pure Installer Mode: All products added from admin panel are immediately installable by all users
+  return true;
 }
 
 function syncDesktopHubSession(userEmail: string, licenses: LicenseItem[]) {
@@ -590,18 +549,10 @@ export const useHubStore = create<HubStoreState>()(
       },
 
       setCurrentTab: (tab) => {
-        const { currentUser, openAuthModal, showToast } = get();
-        if (!currentUser && tab !== 'store') {
-          showToast("এই অপশনটি ব্যবহারের জন্য প্রথমে সাইন ইন করুন।");
-          openAuthModal();
-          return;
-        }
         set({ currentTab: tab, selectedProductDetail: null });
 
         // Automatic silent background sync on navigation
-        if (tab === 'licenses') {
-          get().syncLicenses().catch(() => {});
-        } else if (tab === 'library') {
+        if (tab === 'library') {
           get().scanLocalCEPExtensions().catch(() => {});
         } else if (tab === 'updates') {
           get().initCloudSync().catch(() => {});

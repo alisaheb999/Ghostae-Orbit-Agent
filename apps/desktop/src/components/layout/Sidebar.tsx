@@ -6,23 +6,17 @@ export const Sidebar: React.FC = () => {
     currentTab, 
     setCurrentTab, 
     products, 
-    licenses, 
     updates,
-    showToast,
-    openCustomCepModal,
-    currentUser,
-    openAuthModal
+    openCustomCepModal
   } = useHubStore();
 
   const installedCount = products.filter(p => p.isInstalled).length;
   const updatesCount = updates.length;
-  const activeLicenseCount = licenses.filter(l => l.isEnabled).length;
 
   const navItems = [
     {
       id: 'store',
       label: 'Store & Extensions',
-      locked: false,
       icon: (
         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
           <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
@@ -32,7 +26,6 @@ export const Sidebar: React.FC = () => {
     {
       id: 'library',
       label: 'My Installed',
-      locked: !currentUser,
       count: installedCount,
       icon: (
         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
@@ -41,20 +34,8 @@ export const Sidebar: React.FC = () => {
       )
     },
     {
-      id: 'licenses',
-      label: 'Active Licenses',
-      locked: !currentUser,
-      count: activeLicenseCount,
-      icon: (
-        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-          <path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58s1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41s-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>
-        </svg>
-      )
-    },
-    {
       id: 'updates',
       label: 'Software Updates',
-      locked: !currentUser,
       badge: updatesCount > 0 ? updatesCount : null,
       icon: (
         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
@@ -63,15 +44,6 @@ export const Sidebar: React.FC = () => {
       )
     }
   ];
-
-  const handleNavClick = (item: typeof navItems[0]) => {
-    if (item.locked) {
-      showToast("এই সেকশনটি ব্যবহারের জন্য প্রথমে সাইন ইন করুন।");
-      openAuthModal();
-      return;
-    }
-    setCurrentTab(item.id as any);
-  };
 
   return (
     <aside className="w-64 bg-[#fbfbfd] border-r border-gray-200/80 p-5 flex flex-col justify-between shrink-0 select-none">
@@ -87,7 +59,7 @@ export const Sidebar: React.FC = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => handleNavClick(item)}
+                  onClick={() => setCurrentTab(item.id as any)}
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all cursor-pointer ${
                     isActive 
                       ? 'bg-[#0d7eff] text-white shadow-md shadow-blue-500/20' 
@@ -95,19 +67,15 @@ export const Sidebar: React.FC = () => {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className={isActive ? 'text-white' : item.locked ? 'text-gray-300' : 'text-gray-400'}>
+                    <span className={isActive ? 'text-white' : 'text-gray-400'}>
                       {item.icon}
                     </span>
-                    <span className={`tracking-tight ${item.locked ? 'text-gray-500' : ''}`}>
+                    <span className="tracking-tight">
                       {item.label}
                     </span>
                   </div>
 
-                  {item.locked ? (
-                    <span className="text-[10px] text-gray-400 bg-gray-100/80 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 border border-gray-200/50">
-                      🔒
-                    </span>
-                  ) : item.badge ? (
+                  {item.badge ? (
                     <span className="bg-[#f59e0b] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                       {item.badge}
                     </span>
@@ -148,34 +116,14 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* Guest Sign In Callout (When logged out) OR WhatsApp Support */}
-      <div className="space-y-3 pt-4 border-t border-gray-200/60">
-        {!currentUser && (
-          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/80 to-indigo-50/60 border border-blue-100 text-center space-y-2 shadow-2xs">
-            <div className="text-xs font-bold text-gray-900 flex items-center justify-center gap-1.5">
-              <span>Sign In Required</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-            </div>
-            <p className="text-[11px] text-gray-500 leading-snug">
-              আপনার লাইসেন্স সিংক করতে সাইন ইন করুন।
-            </p>
-            <button
-              onClick={openAuthModal}
-              className="w-full py-2 bg-[#0d7eff] hover:bg-[#026be5] text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 cursor-pointer"
-            >
-              সাইন ইন / লাইসেন্স কি
-            </button>
-          </div>
-        )}
-
-        {/* Vibrant WhatsApp Support Panel */}
+      {/* WhatsApp VIP Support Panel */}
+      <div className="pt-4 border-t border-gray-200/60">
         <a 
           href="https://chat.whatsapp.com/BdoH5Xpn4iFEGEbn4j5WLf"
           target="_blank"
           rel="noreferrer"
           className="relative overflow-hidden p-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-600/20 hover:shadow-xl hover:shadow-emerald-600/30 cursor-pointer transition-all duration-300 block group border border-emerald-400/30 hover:scale-[1.02] active:scale-[0.99]"
         >
-          {/* Subtle Ambient Light Shimmer */}
           <div className="absolute top-0 right-0 -mr-6 -mt-6 w-20 h-20 bg-white/20 rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-500"></div>
 
           <div className="relative z-10 flex items-center gap-3">

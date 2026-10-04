@@ -4,27 +4,7 @@ import { useHubStore } from '../../stores/useHubStore';
 export const UpdatesView: React.FC = () => {
   const { updates, updateAllPending, installExtensionToCEP, products, currentUser, openAuthModal } = useHubStore();
 
-  // Locked Guest State
-  if (!currentUser) {
-    return (
-      <div className="flex-1 overflow-y-auto flex items-center justify-center p-6 view-enter">
-        <div className="bg-white border border-gray-200/80 rounded-3xl p-8 sm:p-10 shadow-xs space-y-4 max-w-sm w-full text-center">
-          <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#0d7eff] flex items-center justify-center mx-auto text-2xl border border-blue-100">
-            🔒
-          </div>
-          <h3 className="font-extrabold text-gray-900 text-base sm:text-lg">
-            Sign In Required
-          </h3>
-          <button
-            onClick={openAuthModal}
-            className="w-full py-2.5 bg-[#0d7eff] hover:bg-[#026be5] text-white font-bold text-xs rounded-xl shadow-md transition active:scale-98 cursor-pointer"
-          >
-            Sign In
-          </button>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#fafbfe] view-enter">

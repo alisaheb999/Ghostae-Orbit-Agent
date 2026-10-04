@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useHubStore, TutorialItem, ScreenshotItem, FaqItem } from '../../stores/useHubStore';
+import { useHubStore, ScreenshotItem, FaqItem } from '../../stores/useHubStore';
 
 export const ProductDetailView: React.FC = () => {
   const { 
     selectedProductDetail, 
     closeProductDetail, 
-    openCheckout, 
     installExtensionToCEP,
     uninstallExtensionFromCEP,
     launchInHost,
@@ -142,7 +141,7 @@ export const ProductDetailView: React.FC = () => {
   const faqs: FaqItem[] = product.faq && product.faq.length > 0 ? product.faq : [
     {
       q: "এটা কি প্রিমিয়ার প্রো এবং আফটার ইফেক্টস দুইটাতেই কাজ করবে?",
-      a: "হ্যাঁ, একক লাইসেন্সেই আপনি আফটার ইফেক্টস এবং প্রিমিয়ার প্রো দুটি সফটওয়্যারেই সম্পূর্ণ ফিচার ব্যবহার করতে পারবেন।"
+      a: "হ্যাঁ, আফটার ইফেক্টস এবং প্রিমিয়ার প্রো দুটি সফটওয়্যারেই সম্পূর্ণ ফিচার কাজ করবে।"
     },
     {
       q: "কোন কোন ভার্সনে এটি সাপোর্ট করবে?",
@@ -150,15 +149,11 @@ export const ProductDetailView: React.FC = () => {
     },
     {
       q: "ইন্সটল কীভাবে করতে হবে?",
-      a: "Ghostae Creative Suite অ্যাপের ভেতরে 'INSTALL' বাটনে ক্লিক করলেই এক ক্লিকে সরাসরি Adobe-এর অফিশিয়াল CEP ডিরেক্টরিতে ইন্সটল হয়ে যাবে। কোনো ম্যানুয়াল আনজিপ বা CMD স্ক্রিপ্ট চালাতে হবে না।"
-    },
-    {
-      q: "ইন্টারনেট কানেকশন ছাড়া কি সফটওয়্যারটি ব্যবহার করা যাবে?",
-      a: "হ্যাঁ! Ghostae-তে ৩০ দিনের সাইনড অফলাইন গ্রেস পিরিয়ড রয়েছে। একবার সাইন-ইন করে নিলে ইন্টারনেট সংযোগ ছাড়াই আপনি টানা কাজ চালিয়ে যেতে পারবেন।"
+      a: "অ্যাপের ভেতরে 'INSTALL' বাটনে ক্লিক করলেই এক ক্লিকে সরাসরি Adobe-এর অফিশিয়াল CEP ডিরেক্টরিতে ইন্সটল হয়ে যাবে। কোনো ম্যানুয়াল আনজিপ বা CMD স্ক্রিপ্ট চালাতে হবে না।"
     },
     {
       q: "ভবিষ্যতে কি কোনো নতুন আপডেট বা অ্যানিমেশন যুক্ত হবে?",
-      a: "হ্যাঁ, আমরা নিয়মিত নতুন অ্যানিমেশন প্রিসেট এবং টেমপ্লেট যুক্ত করি। সমস্ত ভবিষ্যৎ আপডেট আপনি সম্পূর্ণ বিনামূল্যে এই অ্যাপের ভেতর থেকেই ১-ক্লিকে পাবেন।"
+      a: "হ্যাঁ, আমরা নিয়মিত নতুন অ্যানিমেশন প্রিসেট এবং টেমপ্লেট যুক্ত করি। সমস্ত ভবিষ্যৎ আপডেট আপনি এই অ্যাপের ভেতর থেকেই ১-ক্লিকে ইনস্টল করতে পারবেন।"
     }
   ];
 
@@ -204,7 +199,7 @@ export const ProductDetailView: React.FC = () => {
             <span>Back to Store</span>
           </button>
 
-          {/* Action Header Button: Open in Adobe / Install / Buy Now */}
+          {/* Action Header Button */}
           <div className="flex items-center gap-3">
             {product.isInstalled ? (
               <div className="flex items-center gap-2.5">
@@ -257,38 +252,22 @@ export const ProductDetailView: React.FC = () => {
                   </span>
                 </div>
               </div>
-            ) : !product.isOwned && !product.isFree ? (
-              <button
-                onClick={() => openCheckout(product)}
-                className="px-7 py-2.5 bg-[#0088cc] hover:bg-[#0077b5] text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition active:scale-95 cursor-pointer"
-              >
-                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                  <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
-                </svg>
-                <span>BUY NOW — ৳{product.priceBDT} BDT</span>
-              </button>
             ) : (
-              <div className="flex items-center gap-3">
-                <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span>✓ PURCHASED</span>
-                </span>
-                <button
-                  onClick={() => installExtensionToCEP(product.id)}
-                  className="px-8 py-2.5 bg-[#0d7eff] hover:bg-[#026be5] text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition active:scale-95 cursor-pointer"
-                >
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
-                  </svg>
-                  <span>INSTALL</span>
-                </button>
-              </div>
+              <button
+                onClick={() => installExtensionToCEP(product.id)}
+                className="px-8 py-2.5 bg-[#0d7eff] hover:bg-[#026be5] text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition active:scale-95 cursor-pointer"
+              >
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+                </svg>
+                <span>INSTALL TO ADOBE</span>
+              </button>
             )}
           </div>
         </div>
 
         {/* =========================================================
-            HERO CARD & DYNAMIC PRICING OVERVIEW
+            HERO CARD & IDENTITY OVERVIEW
         ========================================================= */}
         <div className="relative overflow-hidden bg-gradient-to-br from-white via-white to-blue-50/40 p-7 sm:p-9 rounded-3xl border border-gray-200/90 shadow-sm">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
@@ -338,35 +317,39 @@ export const ProductDetailView: React.FC = () => {
                 </p>
 
                 <div className="flex items-center gap-3 pt-1 text-xs text-gray-500 font-medium">
-                  <span>⚡ Instant 1-Click CEP Installation</span>
+                  <span>⚡ 1-Click Auto Installer</span>
                   <span>•</span>
-                  <span>🔒 30-Day Offline Grace Mode</span>
+                  <span>📁 Official Adobe CEP Directory</span>
                   <span>•</span>
-                  <span>♾️ Lifetime License</span>
+                  <span>♾️ Free Lifetime Updates</span>
                 </div>
               </div>
             </div>
 
-            {/* Price & Offer Display */}
-            <div className="bg-gradient-to-br from-slate-900 via-[#0a1124] to-[#040814] text-white p-6 rounded-2xl border border-blue-500/30 shadow-lg shrink-0 w-full lg:w-auto text-center lg:text-right space-y-2">
-              <div className="flex items-center justify-center lg:justify-end gap-2.5">
-                {product.originalPriceBDT && product.originalPriceBDT > product.priceBDT && (
-                  <span className="text-sm font-bold text-gray-400 line-through font-mono">
-                    ৳{product.originalPriceBDT}
-                  </span>
-                )}
-                <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 font-extrabold text-[11px] border border-emerald-500/30">
-                  OFFER PRICE
-                </span>
-              </div>
-
-              <div className="text-3xl sm:text-4xl font-black text-white font-mono tracking-tight text-gradient">
-                {product.isFree ? 'FREE' : `৳${product.priceBDT} BDT`}
-              </div>
-
-              <p className="text-[11px] text-blue-200/80 font-medium">
-                One-Time Payment • Lifetime Updates
-              </p>
+            {/* Quick Action Button */}
+            <div className="shrink-0 w-full lg:w-auto">
+              {!product.isInstalled ? (
+                <button
+                  onClick={() => installExtensionToCEP(product.id)}
+                  disabled={isInstalling}
+                  className="w-full lg:w-auto px-8 py-3 bg-[#0d7eff] hover:bg-[#026be5] text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-500/25 transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+                  </svg>
+                  <span>INSTALL NOW</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => launchInHost(product)}
+                  className="w-full lg:w-auto px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-600/25 transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                  <span>LAUNCH IN ADOBE</span>
+                </button>
+              )}
             </div>
 
           </div>
@@ -391,7 +374,7 @@ export const ProductDetailView: React.FC = () => {
                     </span>
                   </h3>
                   <p className="text-xs text-blue-200/80 font-mono mt-0.5">
-                    {product.installStatusText || 'Connecting to Ghostae Cloud & deploying CEP...'}
+                    {product.installStatusText || 'Extracting extension to Adobe directory...'}
                   </p>
                 </div>
               </div>
@@ -575,7 +558,6 @@ export const ProductDetailView: React.FC = () => {
                   }}
                 />
                 
-                {/* Subtle Hover Overlay */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-4 text-white">
                   <div className="self-end p-2 rounded-xl bg-white/20 backdrop-blur-md">
                     <svg className="w-4 h-4 fill-white" viewBox="0 0 24 24">
@@ -592,41 +574,43 @@ export const ProductDetailView: React.FC = () => {
         </section>
 
         {/* =========================================================
-            4. PRICING & GUARANTEE SECTION
+            4. INSTALLATION PROMISE SECTION
         ========================================================= */}
         <section className="bg-gradient-to-br from-[#0c1322] via-[#0f1b36] to-[#080d1a] p-8 sm:p-10 rounded-3xl border border-blue-500/30 text-white shadow-xl space-y-6">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="space-y-3 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-extrabold text-xs border border-emerald-500/30">
-                <span>🛡️ ১ দিনের ১০০% রিফান্ড গ্যারান্টি (24h Money-Back Guarantee)</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 font-extrabold text-xs border border-blue-500/30">
+                <span>⚡ ১-ক্লিক ইনস্টলেশন ও আল্টিমেট ক্রিয়েটিভ প্রোডাকশন</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                লাইফটাইম অ্যাক্সেস ও আনলিমিটেড ক্রিয়েটিভ প্রোডাকশন
+                Adobe After Effects ও Premiere Pro এক্সটেনশন
               </h2>
               <p className="text-sm text-gray-300 max-w-2xl leading-relaxed">
-                কোনো মাসিক সাবস্ক্রিপশন ফি নেই। একবার লাইসেন্স অ্যাক্টিভেট করলেই আজীবন সমস্ত ভবিষ্যৎ অ্যানিমেশন আপডেট বিনামূল্যে এই ডেস্কটপ অ্যাপ থেকেই ১-ক্লিকে ইনস্টল করতে পারবেন।
+                সরাসরি ইনস্টল বাটনে ক্লিক করলেই এক ক্লিকে অ্যাডোবির অফিশিয়াল ডিরেক্টরিতে এক্সটেনশন ডিপ্লয় হবে। সমস্ত ভবিষ্যৎ আপডেট এই অ্যাপ থেকে ১-ক্লিকেই ইনস্টল করা যাবে।
               </p>
             </div>
 
             <div className="shrink-0 flex flex-col items-center lg:items-end gap-3">
-              <div className="text-center lg:text-right">
-                <div className="text-3xl sm:text-4xl font-black font-mono text-white">
-                  {product.isFree ? 'FREE' : `৳${product.priceBDT} BDT`}
-                </div>
-                <div className="text-xs text-emerald-400 font-bold mt-0.5">
-                  ✓ Lifetime Workstation License
-                </div>
-              </div>
-
-              {!product.isOwned && !product.isFree && (
+              {!product.isInstalled ? (
                 <button
-                  onClick={() => openCheckout(product)}
-                  className="px-8 py-3 bg-[#0d7eff] hover:bg-[#026be5] text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-500/30 transition active:scale-95 cursor-pointer flex items-center gap-2"
+                  onClick={() => installExtensionToCEP(product.id)}
+                  disabled={isInstalling}
+                  className="px-8 py-3.5 bg-[#0d7eff] hover:bg-[#026be5] text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-500/30 transition active:scale-95 cursor-pointer flex items-center gap-2"
                 >
-                  <span>BUY NOW (অর্ডার করুন)</span>
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                    <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
                   </svg>
+                  <span>INSTALL EXTENSION NOW</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => launchInHost(product)}
+                  className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-600/30 transition active:scale-95 cursor-pointer flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                  <span>OPEN IN ADOBE</span>
                 </button>
               )}
             </div>
