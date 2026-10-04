@@ -23,15 +23,20 @@ export interface LocalInstalledExtension {
 }
 
 export interface InstallProgressPayload {
+  productId?: string;
   slug: string;
+  cepFolderName?: string;
   progress: number;
   downloadedBytes?: number;
   totalBytes?: number;
   downloadedMB?: string;
   totalMB?: string;
   speed?: string;
+  speedText?: string;
   eta?: string;
+  etaText?: string;
   status?: string;
+  statusText?: string;
   isExtracting?: boolean;
   isDone?: boolean;
   error?: string;
@@ -45,7 +50,7 @@ declare global {
       saveHubSession: (sessionData: any) => Promise<{ success: boolean; path?: string; offline_until?: string; error?: string }>;
       clearHubSession: () => Promise<{ success: boolean; error?: string }>;
       getHubSession: () => Promise<{ success: boolean; session?: any; error?: string }>;
-      installCEPExtension: (params: { slug: string; downloadUrl: string; cepFolderName?: string; expectedChecksum?: string; authToken?: string }) => Promise<{ success: boolean; result?: any; error?: string }>;
+      installCEPExtension: (params: { productId?: string; slug: string; downloadUrl: string; cepFolderName?: string; expectedChecksum?: string; authToken?: string }) => Promise<{ success: boolean; result?: any; error?: string }>;
       onInstallProgress?: (callback: (data: InstallProgressPayload) => void) => () => void;
       openExternal: (url: string) => Promise<{ success: boolean; error?: string }>;
       scanInstalledCEPExtensions: () => Promise<{ success: boolean; extensions: LocalInstalledExtension[]; error?: string }>;

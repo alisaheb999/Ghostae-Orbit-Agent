@@ -382,7 +382,7 @@ app.whenReady().then(async () => {
         throw new Error('Invalid installation parameters.');
       }
 
-      const { slug, downloadUrl, cepFolderName, expectedChecksum, authToken } = params;
+      const { productId, slug, downloadUrl, cepFolderName, expectedChecksum, authToken } = params;
 
       // Validate inputs
       if (!slug || typeof slug !== 'string' || !/^[a-zA-Z0-9._-]+$/.test(slug)) {
@@ -397,6 +397,7 @@ app.whenReady().then(async () => {
 
       const { installPackageFromUrl } = await import('../backend/package-manager.js');
       const result = await installPackageFromUrl({
+        productId,
         slug,
         downloadUrl,
         expectedChecksum,
@@ -406,7 +407,9 @@ app.whenReady().then(async () => {
           try {
             if (event.sender && !event.sender.isDestroyed()) {
               event.sender.send('cep-install-progress', {
+                productId,
                 slug,
+                cepFolderName,
                 ...progressInfo
               });
             }

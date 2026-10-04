@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useHubStore, FaqItem } from '../../stores/useHubStore';
+import React from 'react';
+import { useHubStore } from '../../stores/useHubStore';
 
 export const ProductDetailView: React.FC = () => {
   const { 
@@ -11,445 +11,289 @@ export const ProductDetailView: React.FC = () => {
     showToast
   } = useHubStore();
 
-  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0);
-
   if (!selectedProductDetail) return null;
   const product = selectedProductDetail;
 
-  const isInstalling = product.isInstalling || false;
-  const progress = product.installProgress || 0;
+  const isInstalling = Boolean(product.isInstalling);
+  const isInstalled = Boolean(product.isInstalled);
+  const progress = isInstalling ? (product.installProgress || 0) : (isInstalled ? 100 : 0);
 
-  // Features list
-  const defaultFeatures = [
-    {
-      title: '110+ Premium Motion Presets',
-      desc: 'কাইনেটিক টাইপোগ্রাফি, ইলাস্টিক বাউন্স, নিয়ন গ্লো এবং টেক গ্লিচ টেক্সট অ্যানিমেশন ইঞ্জিন।',
-      icon: '⚡',
-      badge: 'Presets'
-    },
-    {
-      title: '120+ Stylish Video Templates',
-      desc: 'সোশ্যাল মিডিয়া লোয়ার থার্ড, মোশন টাইটেল এবং প্রিমিয়ার প্রো অটো সাবটাইটেল টেমপ্লেট।',
-      icon: '🎬',
-      badge: 'Templates'
-    },
-    {
-      title: '200+ 3D Animated Emojis',
-      desc: 'আল্ট্রা হাই-রেজুলেশন ৩ডি অ্যানিমেটেড ইমোজি ও সোশ্যাল রিঅ্যাকশন কালেকশন।',
-      icon: '🔥',
-      badge: '3D Packs'
-    },
-    {
-      title: '1-Click Apply & Live Easing',
-      desc: 'সরাসরি সিলেক্ট করে এক ক্লিকে টাইমলাইনে অ্যাপ্লাই এবং স্মুথ ইজিং কন্ট্রোলার।',
-      icon: '🎯',
-      badge: 'Workflow'
-    },
-    {
-      title: 'Auto Subtitle & Caption Styler',
-      desc: 'ইউটিউব, রিলস ও শর্টসের জন্য ট্রেন্ডিং সাবটাইটেল ও ক্যাপশন স্টাইলিং ইঞ্জিন।',
-      icon: '📝',
-      badge: 'Social Ready'
-    },
-    {
-      title: 'Dual Host Integration (AE + PR)',
-      desc: 'Adobe After Effects ও Premiere Pro CC 2023 থেকে 2026+ সব ভার্সনে সরাসরি কাজ করে।',
-      icon: '💻',
-      badge: 'Dual Host'
-    }
-  ];
-
-  const featuresToDisplay = (product.features && product.features.length > 0)
-    ? product.features.map((f, i) => ({
-        title: f.title,
-        desc: f.desc,
-        icon: defaultFeatures[i % defaultFeatures.length].icon,
-        badge: defaultFeatures[i % defaultFeatures.length].badge
-      }))
-    : defaultFeatures;
-
-  // FAQs
-  const faqs: FaqItem[] = product.faq && product.faq.length > 0 ? product.faq : [
-    {
-      q: "এটা কি প্রিমিয়ার প্রো এবং আফটার ইফেক্টস দুইটাতেই কাজ করবে?",
-      a: "হ্যাঁ, আফটার ইফেক্টস এবং প্রিমিয়ার প্রো দুটি সফটওয়্যারেই সম্পূর্ণ এক্সটেনশন সরাসরি কাজ করে।"
-    },
-    {
-      q: "কোন কোন ভার্সনে এটি সাপোর্ট করবে?",
-      a: "Adobe Premiere Pro CC 2023 থেকে 2026+ এবং Adobe After Effects CC 2023 থেকে 2026+ যেকোনো ভার্সনে সাপোর্ট করে।"
-    },
-    {
-      q: "ইন্সটল কীভাবে করতে হবে?",
-      a: "অ্যাপের ভেতর 'INSTALL TO ADOBE' বাটনে ক্লিক করলেই এক ক্লিকে সরাসরি Adobe-এর অফিশিয়াল CEP ডিরেক্টরিতে ইন্সটল হয়ে যাবে। কোনো ম্যানুয়াল আনজিপ বা ফাইল সরানো লাগবে না।"
-    },
-    {
-      q: "ভবিষ্যতে কি কোনো নতুন আপডেট বা অ্যানিমেশন যুক্ত হবে?",
-      a: "হ্যাঁ, আমরা নিয়মিত নতুন অ্যানিমেশন প্রিসেট এবং টেমপ্লেট যুক্ত করি। সমস্ত ভবিষ্যৎ আপডেট আপনি এই অ্যাপের ভেতর থেকেই ১-ক্লিকে ইনস্টল করতে পারবেন।"
-    }
-  ];
-
-  const whatsappUrl = product.whatsappUrl || "https://chat.whatsapp.com/GhostaeVIP";
-
-  const handleOpenExternal = (url: string, title?: string) => {
-    if (typeof window !== 'undefined') {
-      const desktop = window.ghostaeDesktop;
-      if (desktop && typeof desktop.openExternal === 'function') {
-        desktop.openExternal(url);
-      } else {
-        window.open(url, '_blank');
-      }
-    }
-    if (title) showToast(`${title} ওপেন করা হয়েছে।`);
-  };
+  const isPremiere = product.targetHost === 'PPRO' || product.category?.toLowerCase().includes('premiere');
+  const isAE = product.targetHost === 'AE' || product.category?.toLowerCase().includes('after');
+  const isDual = product.targetHost === 'BOTH' || product.targetApp === 'dual' || (isPremiere && isAE);
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#fafbfe] view-enter select-none pb-16">
-      <div className="max-w-5xl mx-auto px-6 md:px-10 py-8 space-y-8">
-        
-        {/* =========================================================
-            1. TOP NAVIGATION
-        ========================================================= */}
-        <div className="flex items-center justify-between pb-3 border-b border-gray-200/80">
+    <div className="flex-1 overflow-y-auto bg-slate-50 view-enter select-none pb-16">
+      {/* Sticky Header with Back Button and Live Status */}
+      <header className="w-full bg-white border-b border-slate-200/80 sticky top-0 z-40">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <button 
+            type="button" 
             onClick={closeProductDetail}
-            className="group flex items-center gap-2 text-xs font-bold text-gray-700 hover:text-gray-900 bg-white hover:bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-200 transition shadow-2xs active:scale-95 cursor-pointer"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 hover:text-slate-900 transition-all shadow-xs focus:outline-none cursor-pointer active:scale-95"
           >
-            <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"/>
+            <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
             <span>Back to Store</span>
           </button>
 
-          {/* Action Header Button */}
-          <div className="flex items-center gap-3">
-            {product.isInstalled ? (
-              <div className="flex items-center gap-2.5">
-                {product.hasUpdate && (
-                  <button
-                    onClick={() => installExtensionToCEP(product.id)}
-                    disabled={isInstalling}
-                    className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition active:scale-95 cursor-pointer"
-                  >
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                      <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
-                    </svg>
-                    <span>UPDATE TO v{product.latestVersion || product.version}</span>
-                  </button>
-                )}
-
-                <button
-                  onClick={() => launchInHost(product)}
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm flex items-center gap-2 transition active:scale-95 cursor-pointer"
-                >
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                  <span>OPEN IN ADOBE</span>
-                </button>
-
-                <button
-                  onClick={() => uninstallExtensionFromCEP(product.id)}
-                  className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold rounded-xl transition cursor-pointer"
-                  title="Uninstall Extension"
-                >
-                  Uninstall
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => installExtensionToCEP(product.id)}
-                disabled={isInstalling}
-                className="px-7 py-2.5 bg-[#0d7eff] hover:bg-[#026be5] disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 transition active:scale-95 cursor-pointer"
-              >
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
-                </svg>
-                <span>{isInstalling ? 'DOWNLOADING...' : 'INSTALL TO ADOBE'}</span>
-              </button>
-            )}
+          {/* Minimal Live Status Badge */}
+          <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-medium ${
+            isInstalling 
+              ? 'bg-blue-50/80 border-blue-200 text-blue-700' 
+              : isInstalled 
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                : product.hasUpdate 
+                  ? 'bg-amber-50 border-amber-200 text-amber-700'
+                  : 'bg-slate-100 border-slate-200 text-slate-700'
+          }`}>
+            <span className="relative flex h-2 w-2">
+              {isInstalling && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
+              )}
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                isInstalling 
+                  ? 'bg-blue-600' 
+                  : isInstalled 
+                    ? 'bg-emerald-600' 
+                    : product.hasUpdate 
+                      ? 'bg-amber-500'
+                      : 'bg-slate-400'
+              }`}></span>
+            </span>
+            <span>
+              {isInstalling 
+                ? 'Installing extension' 
+                : isInstalled 
+                  ? 'Installed' 
+                  : product.hasUpdate 
+                    ? 'Update available'
+                    : 'Ready to install'}
+            </span>
           </div>
         </div>
+      </header>
 
-        {/* =========================================================
-            2. HERO CARD & OVERVIEW
-        ========================================================= */}
-        <div className="relative overflow-hidden bg-white p-7 sm:p-8 rounded-3xl border border-gray-200/90 shadow-sm">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+      <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-10 flex flex-col gap-6 justify-center">
+        
+        {/* Card 1: Extension Details (Clean White Card) */}
+        <section className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-xs transition-all">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             
-            <div className="flex items-start sm:items-center gap-5">
-              {product.image ? (
-                <img 
-                  src={product.image} 
-                  alt={product.name}
-                  className="w-20 h-20 rounded-2xl object-cover shadow-md border border-gray-200 shrink-0" 
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = './icon.png';
-                  }}
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-900 to-[#0d1b38] border border-blue-500/20 flex items-center justify-center shrink-0 shadow-md">
-                  <img src="./icon.png" alt="Ghostae" className="w-10 h-10 object-contain" />
-                </div>
-              )}
+            {/* Left: Product Identity */}
+            <div className="flex items-start sm:items-center gap-6">
+              {/* Dark App Icon for High Contrast */}
+              <div className="relative shrink-0 w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-black p-3 shadow-md flex items-center justify-center">
+                <svg className="w-9 h-9 text-white drop-shadow-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                </svg>
+              </div>
 
+              {/* Title, Host Badge & Subtitle */}
               <div className="space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-black">
                     {product.name}
                   </h1>
                   
-                  <span className="px-2.5 py-0.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold text-[10px] shadow-xs tracking-wide uppercase">
-                    {product.targetHost === 'BOTH' || product.targetApp === 'dual' ? 'Dual Host (AE & PR)' : product.targetHost === 'PPRO' ? 'Premiere Pro' : 'After Effects'}
-                  </span>
-
-                  <span className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-mono text-xs font-bold border border-slate-200">
-                    v{product.latestVersion || product.version}
-                  </span>
-
-                  {product.isInstalled && (
-                    <span className="px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      <span>Installed</span>
-                    </span>
+                  {/* Clean Adobe Host Badges */}
+                  {(isPremiere || isDual) && (
+                    <div className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-[#00005b] border border-[#333399]/40 shadow-2xs" title="Adobe Premiere Pro">
+                      <span className="text-[11px] font-black text-[#9999ff] tracking-tighter select-none">Pr</span>
+                    </div>
+                  )}
+                  {(isAE || isDual) && (
+                    <div className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-[#00005b] border border-[#333399]/40 shadow-2xs" title="Adobe After Effects">
+                      <span className="text-[11px] font-black text-[#9999ff] tracking-tighter select-none">Ae</span>
+                    </div>
                   )}
                 </div>
 
-                <p className="text-sm text-gray-600 font-medium max-w-2xl leading-relaxed">
-                  {product.shortDesc || product.tagline || 'After Effects ও Premiere Pro-এর জন্য আল্টিমেট টেক্সট ও ক্যাপশন ইঞ্জিন'}
+                <p className="text-sm text-slate-600 leading-relaxed max-w-lg">
+                  {product.shortDesc || product.description || 'After Effects ও Premiere Pro-এর জন্য আল্টিমেট টেক্সট ও ক্যাপশন ইঞ্জিন।'}
                 </p>
 
-                <div className="flex items-center gap-3 pt-1 text-xs text-gray-500 font-medium">
-                  <span className="flex items-center gap-1 text-blue-600 font-bold">⚡ 1-Click Auto Installer</span>
-                  <span>•</span>
-                  <span>📁 Adobe CEP Extensions</span>
-                  <span>•</span>
-                  <span>♾️ Free Lifetime Updates</span>
+                {/* Version metadata */}
+                <div className="pt-1 flex items-center gap-2 text-xs font-mono text-slate-400">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                    v{product.latestVersion || product.version} Stable Release
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Quick Action Button */}
-            <div className="shrink-0 w-full sm:w-auto">
-              {!product.isInstalled ? (
-                <button
+            {/* Right: Primary Action Button */}
+            <div className="flex items-center sm:self-center">
+              {isInstalling ? (
+                <button 
+                  type="button" 
+                  disabled
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold shadow-md shadow-blue-600/20 cursor-wait"
+                >
+                  <svg className="animate-spin -ml-0.5 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Installing...</span>
+                </button>
+              ) : isInstalled ? (
+                <button 
+                  type="button" 
+                  onClick={() => launchInHost(product)}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-black hover:bg-slate-800 text-white text-sm font-semibold shadow-md transition-all cursor-pointer active:scale-95"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                  <span>Open in {isPremiere ? 'Premiere' : 'After Effects'}</span>
+                </button>
+              ) : (
+                <button 
+                  type="button" 
                   onClick={() => installExtensionToCEP(product.id)}
-                  disabled={isInstalling}
-                  className="w-full sm:w-auto px-8 py-3 bg-[#0d7eff] hover:bg-[#026be5] disabled:opacity-50 text-white font-black text-sm rounded-2xl shadow-lg shadow-blue-500/25 transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-md shadow-blue-600/20 transition-all focus:outline-none cursor-pointer active:scale-95"
                 >
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                     <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
                   </svg>
-                  <span>{isInstalling ? 'INSTALLING...' : 'INSTALL NOW'}</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => launchInHost(product)}
-                  className="w-full sm:w-auto px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-2xl shadow-lg shadow-emerald-600/25 transition active:scale-95 cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                  <span>LAUNCH IN ADOBE</span>
+                  <span>Install</span>
                 </button>
               )}
             </div>
 
           </div>
-        </div>
+        </section>
 
-        {/* =========================================================
-            3. REAL-TIME IDM-STYLE STREAMING DOWNLOAD METER
-        ========================================================= */}
-        {isInstalling && (
-          <div className="bg-gradient-to-br from-slate-900 via-[#0d1830] to-slate-950 p-6 sm:p-7 rounded-3xl border border-blue-500/40 shadow-xl text-white space-y-5 animate-in fade-in duration-300">
-            {/* Header / Status */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-[#38bdf8] flex items-center justify-center font-bold border border-blue-500/40 shrink-0 shadow-inner">
-                  <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
-                    <span>Downloading & Installing {product.name}</span>
-                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-blue-500/20 text-cyan-300 border border-blue-500/40 font-bold">
-                      {progress}%
-                    </span>
-                  </h3>
-                  <p className="text-xs text-blue-200/90 font-medium mt-0.5">
-                    {product.installStatusText || 'Streaming package chunks from Ghostae CDN...'}
-                  </p>
-                </div>
+        {/* Card 2: Installation Progress & Metrics (Unified White & Blue Theme) */}
+        <section className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-xs flex flex-col gap-6">
+          
+          {/* Progress Bar & Stage Status */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-2.5 h-2.5 rounded-full ${
+                  isInstalling 
+                    ? 'bg-blue-600 animate-pulse' 
+                    : isInstalled 
+                      ? 'bg-emerald-500' 
+                      : 'bg-slate-300'
+                }`}></div>
+                <span className="text-sm font-semibold text-slate-900">
+                  {isInstalling 
+                    ? (product.installStatusText || `Downloading & Installing ${product.name}...`)
+                    : isInstalled 
+                      ? 'Installation Completed Successfully'
+                      : `Ready to Install ${product.name}`}
+                </span>
               </div>
-            </div>
-
-            {/* Smooth Progress Bar */}
-            <div className="space-y-1.5">
-              <div className="w-full bg-slate-800/90 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700/80 shadow-inner">
-                <div 
-                  className="bg-gradient-to-r from-[#0d7eff] via-cyan-400 to-[#0d7eff] h-full rounded-full transition-all duration-300 shadow-md" 
-                  style={{ width: `${Math.max(2, progress)}%` }}
-                ></div>
-              </div>
-            </div>
-
-            {/* IDM-Style Stream Metrics HUD */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-              <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3 space-y-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                  <span>⚡ Transfer Speed</span>
-                </div>
-                <div className="font-mono text-xs font-extrabold text-cyan-300">
-                  {product.downloadSpeed || 'Calculating...'}
-                </div>
-              </div>
-
-              <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3 space-y-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                  <span>📦 Transferred</span>
-                </div>
-                <div className="font-mono text-xs font-extrabold text-blue-300">
-                  {product.downloadedMB || '0 MB'} {product.totalMB ? `/ ${product.totalMB}` : ''}
-                </div>
-              </div>
-
-              <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3 space-y-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                  <span>⏱️ Time Left</span>
-                </div>
-                <div className="font-mono text-xs font-extrabold text-amber-300">
-                  {product.downloadEta || 'Calculating...'}
-                </div>
-              </div>
-
-              <div className="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3 space-y-1">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                  <span>📁 Destination</span>
-                </div>
-                <div className="font-mono text-xs font-extrabold text-emerald-300 truncate">
-                  Adobe CEP
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* =========================================================
-            4. FEATURES GRID
-        ========================================================= */}
-        <section className="space-y-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#0d7eff]"></span>
-              <span className="text-xs font-bold uppercase tracking-wider text-[#0d7eff]">
-                Key Capabilities
+              <span className="text-base font-bold font-mono text-blue-600">
+                {progress}%
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
-              ফিচারসমূহ ও সক্ষমতা
-            </h2>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {featuresToDisplay.map((feat, idx) => (
-              <div
-                key={idx}
-                className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs hover:shadow-md transition space-y-2.5 group"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl">{feat.icon}</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold border border-blue-100">
-                    {feat.badge}
-                  </span>
-                </div>
-
-                <h3 className="text-sm font-extrabold text-gray-900 group-hover:text-[#0d7eff] transition-colors">
-                  {feat.title}
-                </h3>
-
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  {feat.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* =========================================================
-            5. FAQ SECTION
-        ========================================================= */}
-        <section className="bg-white p-7 sm:p-8 rounded-3xl border border-gray-200/90 shadow-sm space-y-5">
-          <div className="space-y-1">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-              Frequently Asked Questions
-            </h3>
-            <h2 className="text-xl font-black text-gray-900 tracking-tight">
-              সাধারণ প্রশ্নাবলী (FAQ)
-            </h2>
-          </div>
-
-          <div className="divide-y divide-gray-100">
-            {faqs.map((faq, idx) => {
-              const isOpen = openFaqIdx === idx;
-              return (
-                <div key={idx} className="py-3.5">
-                  <button
-                    onClick={() => setOpenFaqIdx(isOpen ? null : idx)}
-                    className="w-full flex items-center justify-between text-left gap-4 font-extrabold text-sm text-gray-900 hover:text-[#0d7eff] transition-colors cursor-pointer"
-                  >
-                    <span>{faq.q}</span>
-                    <span className={`w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-bold transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 bg-blue-50 text-[#0d7eff]' : ''}`}>
-                      <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                        <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-                      </svg>
-                    </span>
-                  </button>
-
-                  {isOpen && (
-                    <div className="mt-2.5 text-xs sm:text-sm text-gray-600 leading-relaxed pl-1 animate-in fade-in duration-200">
-                      {faq.a}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* =========================================================
-            6. WHATSAPP VIP COMMUNITY
-        ========================================================= */}
-        <section className="bg-gradient-to-r from-emerald-950 via-[#072418] to-slate-900 p-6 sm:p-7 rounded-3xl border border-emerald-500/30 text-white shadow-md">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-5">
-            <div className="flex items-center gap-4 text-center sm:text-left">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center font-bold text-2xl shadow-lg shrink-0">
-                💬
-              </div>
-              <div className="space-y-0.5">
-                <h3 className="text-base sm:text-lg font-black text-white">
-                  Join Ghostae VIP Editor Community
-                </h3>
-                <p className="text-xs text-emerald-200/90 leading-relaxed max-w-xl">
-                  নতুন অ্যানিমেশন আপডেট এবং তাৎক্ষণিক সাপোর্টের জন্য আমাদের অফিশিয়াল VIP হোয়াটসঅ্যাপ কমিউনিটিতে যুক্ত হোন।
-                </p>
-              </div>
+            {/* Clean Progress Bar Track */}
+            <div className="relative w-full h-2.5 rounded-full bg-slate-100 overflow-hidden border border-slate-200/60">
+              <div 
+                className={`h-full rounded-full transition-all duration-300 ease-out ${
+                  isInstalled ? 'bg-emerald-600' : 'bg-blue-600'
+                }`}
+                style={{ width: `${progress}%` }}
+              ></div>
             </div>
 
-            <button
-              onClick={() => handleOpenExternal(whatsappUrl, "Ghostae VIP WhatsApp Group")}
-              className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-500/30 transition active:scale-95 cursor-pointer flex items-center gap-2 shrink-0"
-            >
-              <span>Join WhatsApp Group</span>
-              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-              </svg>
-            </button>
+            <div className="text-xs text-slate-500 pt-0.5">
+              <span>
+                {isInstalling 
+                  ? (progress < 90 ? 'Streaming package chunks from Ghostae CDN' : 'Writing binaries to Adobe CEP directory')
+                  : isInstalled 
+                    ? `Extension is ready to launch in Adobe ${isPremiere ? 'Premiere Pro' : 'After Effects'}`
+                    : '1-Click direct deployment into Adobe CEP extension folder'}
+              </span>
+            </div>
           </div>
+
+          {/* Telemetry Grid: 3 Clean Columns */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            
+            {/* Transfer Speed */}
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase block mb-1">
+                Transfer Speed
+              </span>
+              <span className="text-sm font-mono font-semibold text-slate-900">
+                {isInstalling ? (product.downloadSpeed || 'Calculating...') : isInstalled ? 'Complete' : '0 MB/s'}
+              </span>
+            </div>
+
+            {/* Downloaded */}
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase block mb-1">
+                Transferred
+              </span>
+              <span className="text-sm font-mono font-semibold text-slate-900">
+                {isInstalling 
+                  ? (product.downloadedMB && product.totalMB ? `${product.downloadedMB} / ${product.totalMB}` : 'Calculating...')
+                  : isInstalled ? 'Verified (CEP)' : '-- / --'}
+              </span>
+            </div>
+
+            {/* Time Remaining */}
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase block mb-1">
+                Time Left
+              </span>
+              <span className="text-sm font-mono font-semibold text-slate-900">
+                {isInstalling ? (product.downloadEta || 'Calculating...') : isInstalled ? '0 sec' : '--'}
+              </span>
+            </div>
+
+          </div>
+
+          {/* Action Footer */}
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div className="text-xs text-slate-400 font-mono">
+              Target: %APPDATA%\Adobe\CEP\extensions\{product.cepFolderName}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {isInstalled ? (
+                <>
+                  <button 
+                    type="button" 
+                    onClick={() => installExtensionToCEP(product.id)}
+                    disabled={isInstalling}
+                    className="px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition-colors shadow-2xs cursor-pointer active:scale-95"
+                  >
+                    Reinstall
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => uninstallExtensionFromCEP(product.id)}
+                    disabled={isInstalling}
+                    className="px-3.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-medium transition-colors shadow-2xs cursor-pointer active:scale-95"
+                  >
+                    Uninstall
+                  </button>
+                </>
+              ) : (
+                <button 
+                  type="button" 
+                  onClick={() => installExtensionToCEP(product.id)}
+                  disabled={isInstalling}
+                  className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-colors shadow-2xs cursor-pointer active:scale-95"
+                >
+                  Install Now
+                </button>
+              )}
+            </div>
+          </div>
+
         </section>
 
-      </div>
+      </main>
     </div>
   );
 };

@@ -78,24 +78,35 @@ export const StoreView: React.FC = () => {
         <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between bg-white">
           <div>
             <div className="flex items-center justify-between gap-2">
-              <h3 className="font-bold text-sm text-gray-900 group-hover:text-[#0d7eff] transition-colors truncate">
-                {product.name}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-sm text-gray-900 group-hover:text-[#0d7eff] transition-colors truncate">
+                  {product.name}
+                </h3>
+                {product.targetHost === 'PPRO' ? (
+                  <div className="inline-flex items-center justify-center w-5 h-5 rounded bg-[#00005b] border border-[#333399]/40 shrink-0" title="Adobe Premiere Pro">
+                    <span className="text-[10px] font-black text-[#9999ff] tracking-tighter select-none">Pr</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center justify-center w-5 h-5 rounded bg-[#00005b] border border-[#333399]/40 shrink-0" title="Adobe After Effects">
+                    <span className="text-[10px] font-black text-[#9999ff] tracking-tighter select-none">Ae</span>
+                  </div>
+                )}
+              </div>
               <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-bold shrink-0">
-                v{product.version}
+                v{product.latestVersion || product.version}
               </span>
             </div>
 
-            <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">
+            <p className="text-xs text-gray-500 mt-1.5 line-clamp-2 leading-relaxed">
               {product.shortDesc || product.description || 'Adobe Creative Cloud Extension'}
             </p>
           </div>
 
           <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              <span>Official Extension</span>
-            </span>
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              <span>{product.targetHost === 'PPRO' ? 'Premiere Pro' : 'After Effects'}</span>
+            </div>
 
             <div className="flex items-center gap-2">
               {product.isInstalling ? (

@@ -252,7 +252,7 @@ export const useHubStore = create<HubStoreState>()(
             const newUpdates: UpdateItem[] = [];
 
             const syncedProducts: ProductItem[] = catalogRes.products.map(cp => {
-              const existing = currentProducts.find(p => p.slug === cp.slug || p.id === cp.id);
+              const existing = currentProducts.find(p => p.id === cp.id || (p.cepFolderName && p.cepFolderName === cp.cep_folder_name));
               const isInstalled = existing?.isInstalled || false;
               const installedVersion = existing?.version || '1.0.0';
               const latestVersion = cp.latest_version;
@@ -260,8 +260,8 @@ export const useHubStore = create<HubStoreState>()(
 
               if (hasUpdate) {
                 newUpdates.push({
-                  id: `upd-${cp.slug}`,
-                  productId: cp.id || `prod-${cp.slug}`,
+                  id: `upd-${cp.id}`,
+                  productId: cp.id,
                   name: cp.name,
                   versionAvailable: `v${latestVersion} Available`,
                   notes: cp.changelog || 'Performance improvements and Adobe compatibility updates.',
@@ -273,7 +273,7 @@ export const useHubStore = create<HubStoreState>()(
               const isOwned = checkIsProductOwned(cp, currentLicenses, currentUser);
 
               return {
-                id: cp.id || `prod-${cp.slug}`,
+                id: cp.id,
                 slug: cp.slug,
                 name: cp.name,
                 type: 'official',
@@ -308,7 +308,7 @@ export const useHubStore = create<HubStoreState>()(
             // Update selected product detail if it was open
             const currentSelected = get().selectedProductDetail;
             const updatedSelected = currentSelected 
-              ? (syncedProducts.find(p => p.slug === currentSelected.slug || p.id === currentSelected.id) || null)
+              ? (syncedProducts.find(p => p.id === currentSelected.id || (p.cepFolderName && p.cepFolderName === currentSelected.cepFolderName)) || null)
               : null;
 
             // Strictly server products ONLY. Never preserve stale mock/demo items!
@@ -628,11 +628,12 @@ export const useHubStore = create<HubStoreState>()(
         // Check if running in Electron environment for real filesystem write
         if (typeof window !== 'undefined' && window.ghostaeDesktop?.installCEPExtension) {
           const downloadUrl = product.downloadUrl || `https://ghostae.com/downloads/${product.slug}.zip`;
-          const cepFolderName = product.cepFolderName || (product.slug.startsWith('com.') ? product.slug : `com.ghostae.${product.slug}`);
+          const cepFolderName = product.cepFolderName || (product.targetHost === 'PPRO' ? 'com.ghostae.text.ppro' : 'com.ghostae.text.ae');
 
           const desktop = window.ghostaeDesktop;
           try {
             const installRes = await desktop.installCEPExtension({
+              productId: product.id,
               slug: product.slug,
               downloadUrl,
               cepFolderName,
@@ -756,12 +757,14 @@ export const useHubStore = create<HubStoreState>()(
             // Cross-reference with store products to sync isInstalled flag
             const currentProducts = get().products;
             const updatedProducts = currentProducts.map(p => {
-              const match = localList.some((ext: LocalInstalledExtension) => 
-                ext.folderName.toLowerCase() === (p.cepFolderName || '').toLowerCase() ||
-                ext.folderName.toLowerCase() === p.slug.toLowerCase() ||
-                ext.id.toLowerCase() === (p.cepFolderName || '').toLowerCase() ||
-                ext.id.toLowerCase() === p.slug.toLowerCase()
-              );
+              const match = localList.some((ext: LocalInstalledExtension) => {
+                const folder = ext.folderName.toLowerCase();
+                const targetFolder = (p.cepFolderName || '').toLowerCase();
+                if (folder === targetFolder) return true;
+                if (p.targetHost === 'PPRO' && (folder.includes('ppro') || folder.includes('premiere'))) return true;
+                if (p.targetHost === 'AE' && (folder === 'com.text' || folder.includes('.ae') || folder.includes('aftereffects'))) return true;
+                return false;
+              });
               return match ? { ...p, isInstalled: true } : p;
             });
             set({ 
@@ -910,7 +913,10 @@ export const useHubStore = create<HubStoreState>()(
 // Global IPC progress listener for real IDM-style byte-streaming metrics
 if (typeof window !== 'undefined' && window.ghostaeDesktop?.onInstallProgress) {
   window.ghostaeDesktop.onInstallProgress((progressData: any) => {
-    const slug = progressData.slug;
+    const targetProductId = progressData.productId;
+    const targetCepFolder = progressData.cepFolderName;
+    const targetSlug = progressData.slug;
+
     const rawProgress = progressData.progress ?? progressData.percent;
     const progress = typeof rawProgress === 'number' ? Math.round(rawProgress) : 0;
     const speed = progressData.speed || progressData.speedText || 'Calculating...';
@@ -932,7 +938,10 @@ if (typeof window !== 'undefined' && window.ghostaeDesktop?.onInstallProgress) {
 
     useHubStore.setState((state) => {
       const updatedProducts = state.products.map(p => {
-        if (p.slug === slug || (p.cepFolderName && p.cepFolderName.includes(slug)) || p.id === slug) {
+        const isTarget = (targetProductId && p.id === targetProductId) ||
+                         (targetCepFolder && p.cepFolderName === targetCepFolder) ||
+                         (p.id === targetSlug);
+        if (isTarget) {
           return {
             ...p,
             installProgress: progress,
@@ -949,9 +958,9 @@ if (typeof window !== 'undefined' && window.ghostaeDesktop?.onInstallProgress) {
       });
 
       const updatedSelected = state.selectedProductDetail && (
-        state.selectedProductDetail.slug === slug || 
-        state.selectedProductDetail.id === slug ||
-        (state.selectedProductDetail.cepFolderName && state.selectedProductDetail.cepFolderName.includes(slug))
+        (targetProductId && state.selectedProductDetail.id === targetProductId) ||
+        (targetCepFolder && state.selectedProductDetail.cepFolderName === targetCepFolder) ||
+        (state.selectedProductDetail.id === targetSlug)
       ) ? updatedProducts.find(p => p.id === state.selectedProductDetail?.id) || null : state.selectedProductDetail;
 
       return {

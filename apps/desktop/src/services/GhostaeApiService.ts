@@ -760,11 +760,13 @@ export const GhostaeApiService = {
           });
         }
 
+        const uniqueId = String(p.release_id || p.releaseId || p.cep_folder_name || (p.host_app ? `${slug}-${p.host_app}` : `${slug}-${targetHost.toLowerCase()}`));
+
         return {
-          id: p.id || p.release_id || p.releaseId || `prod-${slug}`,
+          id: uniqueId,
           slug: slug,
-          name: p.name || (slug === 'text' ? 'Ghostae Text' : 'Ghostae Extension'),
-          category: p.category || (slug === 'text' ? 'Text Animation Panel' : 'Creative Extension'),
+          name: p.name || (slug === 'text' ? (targetHost === 'PPRO' ? 'Ghostae Text (Premiere Pro)' : 'Ghostae Text (After Effects)') : 'Ghostae Extension'),
+          category: p.category || (targetHost === 'PPRO' ? 'Premiere Pro' : 'After Effects'),
           price_bdt: priceBDT,
           original_price_bdt: originalPriceBDT,
           is_free: isFree,
@@ -774,10 +776,10 @@ export const GhostaeApiService = {
           min_ae_version: p.min_ae_version || 2023,
           thumbnail_url: thumbnailUrl,
           download_url: downloadUrl,
-          cep_folder_name: p.cep_folder_name || p.cepFolderName || (slug === 'text' ? 'com.text' : `com.ghostae.${slug}`),
+          cep_folder_name: p.cep_folder_name || p.cepFolderName || (targetHost === 'PPRO' ? 'com.ghostae.text.ppro' : 'com.ghostae.text.ae'),
           changelog: p.changelog || p.release_notes || p.releaseNotes || '',
           description: p.description || p.short_description || '',
-          short_desc: p.short_desc || p.short_description || 'After Effects ও Premiere Pro-এর জন্য আল্টিমেট টেক্সট ও ক্যাপশন ইঞ্জিন',
+          short_desc: p.short_desc || p.short_description || (targetHost === 'PPRO' ? 'Premiere Pro-এর জন্য আল্টিমেট টেক্সট ও ক্যাপশন ইঞ্জিন' : 'After Effects-এর জন্য আল্টিমেট টেক্সট ও ক্যাপশন ইঞ্জিন'),
           screenshots: normalizedScreenshots,
           host_screenshots: hostScreenshots,
           showcase: showcase,
